@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+
+/* Design-Tokens — FEST laut CLAUDE.md. Nicht ohne Rückfrage ändern. */
+@theme {
+  --color-bg: #0b0b0c;
+  --color-panel: #141416;
+  --color-line: #28282c;
+  --color-gold: #d4af37;
+  --color-text: #f3f0e7;
+  --color-muted: #98948a;
+
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-sans: 'Archivo', system-ui, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100svh;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* Zahlen und Labels laufen in Space Mono mit gleicher Ziffernbreite. */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}

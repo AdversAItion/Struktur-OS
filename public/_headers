@@ -1,0 +1,8 @@
+# Spiegelt die Header aus netlify.toml, damit sie auch bei einem direkten
+# dist-Deploy (API/Drag-Drop, ohne CI-Build) greifen. Bei Änderung BEIDE
+# Stellen pflegen: hier und netlify.toml.
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Robots-Tag: noindex, nofollow
