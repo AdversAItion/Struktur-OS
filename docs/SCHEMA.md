@@ -1,6 +1,6 @@
 # Datenbank-Schema
 
-Stand: Migrationen `0001` – `0003`.
+Stand: Migrationen `0001` – `0004`.
 **Nach jeder Migration diese Datei aktualisieren** (CLAUDE.md, Merge-Regel 2).
 
 Alle Schema-Änderungen laufen über SQL-Dateien in `supabase/migrations/` —
@@ -11,6 +11,7 @@ nie manuell im Supabase-Dashboard klicken.
 | `0001_init_auth_rollen.sql` | Enum `rolle`, Tabelle `partner`, Helfer, Trigger, RLS |
 | `0002_struktur_und_vertrieb.sql` | Rekursive Struktur-Sicht, `ziele`, `einheiten`, `termine`, `todos`, `onboarding_trigger` |
 | `0003_akademie.sql` | `akademie_module`, `akademie_lektionen`, `akademie_tests`, `akademie_fortschritt` |
+| `0004_onboarding_erinnerungen.sql` | `onboarding_trigger.erinnerung_gesendet_am`, Tabelle `onboarding_vorlagen` (Edge-Function-Automatik) |
 
 ---
 
@@ -211,15 +212,39 @@ protokolliert und bekommt eine fällige Folgeaktion.
 | `ausgeloest_am` | `timestamptz` NOT NULL | Default `now()` |
 | `aktion_faellig_am` | `date` NULL | |
 | `aktion_erledigt` | `boolean` NOT NULL | Default `false` |
+| `erinnerung_gesendet_am` | `timestamptz` NULL | (0004) Idempotenz: gesetzt, wenn die Erinnerungs-Mail raus ist |
 | `created_at` | `timestamptz` NOT NULL | |
 
-Partieller Index auf offene, fällige Zeilen.
+Partielle Indizes auf offene, fällige Zeilen (0002) und auf offene, noch nicht
+erinnerte, fällige Zeilen für die Cron-Abfrage (0004).
 
 RLS: lesen eigene + Struktur; **schreiben nur master** (Verwaltungsvorgang).
 
-> Die Automatik selbst ist **noch nicht gebaut**. Gedacht ist: ein Job liest offene,
-> fällige Zeilen und erzeugt daraus `todos` (`quelle = 'system'`) bzw. E-Mails
-> über Resend.
+## Tabelle: `onboarding_vorlagen` (0004)
+
+E-Mail-Vorlage je `trigger_typ` — trennt Inhalt vom Code der Edge Function, damit
+der Master Texte/Links ohne Deploy pflegt.
+
+| Spalte | Typ | Notiz |
+|---|---|---|
+| `trigger_typ` | `text` PK | gleiche CHECK-Werte wie `onboarding_trigger` |
+| `betreff` | `text` NOT NULL | E-Mail-Betreff |
+| `inhalt` | `text` NOT NULL | Body; `{{name}}` → Vorname des Partners |
+| `tutorial_url` | `text` NULL | Link im „Zum Tutorial"-Button |
+| `aktiv` | `boolean` NOT NULL | Default `false` |
+| `created_at` / `updated_at` | `timestamptz` NOT NULL | |
+
+RLS: nur master (`onboarding_vorlagen_alles_master`). Die Edge Function nutzt den
+`service_role`-Key und umgeht RLS.
+
+0004 legt je `trigger_typ` einen **inaktiven ENTWURF-Platzhalter** an (`aktiv =
+false`, `tutorial_url = NULL`). Die Automatik sendet nur bei `aktiv = true` UND
+gesetzter `tutorial_url` — Platzhalter lösen also nie eine Mail aus.
+
+### Automatik — Edge Function `onboarding-erinnerungen` (Session 6)
+Täglicher Cron liest fällige, offene, noch nicht erinnerte Trigger, sendet über
+Resend die aktive Vorlage an die Partner-E-Mail und setzt `erinnerung_gesendet_am`.
+Code + Setup: `supabase/functions/onboarding-erinnerungen/`.
 
 ---
 
@@ -315,8 +340,14 @@ eingespielt (lokaler Wegwerf-Cluster mit nachgebautem `auth.users` und
 - Ein GP kann sich keine Einheiten eintragen.
 - Die Zyklus-Bremse fängt einen Ring in der Upline-Kette ab (1 ms statt Hänger).
 
+Migration `0004` separat gegen echtes Postgres geprüft (8 Tests): Spalte + Tabelle
+angelegt, 4 inaktive Vorlagen-Platzhalter, CHECK auf `trigger_typ`, die Cron-Abfrage
+liefert nur fällige/offene/ungesendete Trigger, Idempotenz nach dem Markieren, und
+die RLS sperrt `gp_frisch` von `onboarding_vorlagen`.
+
 **Noch nicht gegen echtes Supabase getestet.** Der Stub bildet `auth.uid()` nach,
-nicht die echte GoTrue-Auth. Nach `supabase db push` einmal live gegenprüfen.
+nicht die echte GoTrue-Auth. `0004` ist zudem noch **nicht gepusht** (kommt in der
+Audit-/Deploy-Phase). Nach `supabase db push` einmal live gegenprüfen.
 
 ---
 

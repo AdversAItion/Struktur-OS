@@ -37,3 +37,6 @@ supabase/.branches
 
 # Claude Code — git-Worktrees von Hintergrund-Agenten (transient)
 .claude/worktrees/
+
+# Deno-Lockfile (Edge Functions pinnen Versionen in den Imports; lokales Testartefakt)
+deno.lock

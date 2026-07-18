@@ -6,6 +6,29 @@ Stand: 2026-07-18
 
 ## Fertig
 
+### Workflows — Onboarding-Erinnerungen (Session 6)
+Automatische Erinnerungen: täglicher Cron liest fällige `onboarding_trigger` und
+schickt je `trigger_typ` eine Resend-Mail mit Tutorial-Link an den Partner.
+
+- **Migration 0004**: `onboarding_trigger.erinnerung_gesendet_am` (Idempotenz) +
+  Konfig-Tabelle `onboarding_vorlagen` (Betreff/Inhalt/Link/`aktiv` je Typ) mit
+  **inaktiven ENTWURF-Platzhaltern** — nichts sendet, bis echte Inhalte da sind.
+- **Edge Function** `supabase/functions/onboarding-erinnerungen/` (Deno):
+  reine Logik (`logik.ts`) getrennt vom Handler (`index.ts`). Sendet nur bei
+  sendbereiter Vorlage (aktiv + URL), markiert erst nach erfolgreichem Versand,
+  HTML-Escaping im Body, Endpunkt per `CRON_SECRET` geschützt.
+- **Verifiziert**: Migration 0004 gegen echtes Postgres (8/8 grün — Cron-Abfrage,
+  Idempotenz, CHECK, RLS). Deno: `deno check` sauber, `deno test` 11/11 grün
+  (u. a. „ENTWURF sendet nie" und XSS-Escaping). Frontend unberührt, Build/Lint grün.
+- **Bewusst nicht live**: `0004` noch nicht gepusht, Function nicht deployed, keine
+  echten Vorlagen-Inhalte/Keys — alles in der Setup-Checkliste
+  (`supabase/functions/onboarding-erinnerungen/README.md`) für die Audit-Phase.
+
+Offen (Vertriebslogik, nicht geraten):
+- Echte Vorlagen-Texte + Tutorial-Links je `trigger_typ`.
+- Wer/was legt `onboarding_trigger` an (Ereignis + Frist)? Eine Master-UI dafür
+  fehlt noch — Trigger entstehen bisher nur per SQL/Seed.
+
 ### Modul `kalender` (Session 5)
 Eigener Kalender + To-dos — jeder Partner verwaltet seine Termine (Beratung,
 Nachfassen, Rekrutierung, Sonstiges) und offenen Aufgaben. Kein neues Schema:
@@ -236,15 +259,18 @@ Bewusst nicht geraten (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAG
 ---
 
 ## Nächste Steps (laut Fahrplan)
-1. **Echte Akademie-Inhalte einpflegen** — Player (S2) + Verwaltung (S3) stehen;
-   der Master kann jetzt über die UI reale Module/Lektionen/Tests anlegen
-   (braucht Modul-Zuschnitt vom Vertrieb).
-2. **Namensliste** — nächstes größeres Modul, Fachlogik/Tabellen noch komplett
-   offen (braucht eigene Migration + Input vom Vertrieb).
-3. Antworten auf die offenen Vertriebsfragen oben (blockiert v. a. Karrieresystem,
-   Termin-Typen und „Pflicht-Aufgaben je Rolle").
-4. Struktur-Sicht im `kalender`-Modul (Führungskraft sieht/vergibt Termine/To-dos
-   der Downline) — RLS erlaubt es bereits, UI fehlt noch (siehe kalender/README).
+1. **Session 7 — KI-Namensliste**: geführtes Interview über eine Edge Function
+   (Anthropic API), Kontakte mit ABC-Kategorie speichern. Braucht eigene Migration
+   (Tabellen) + `ANTHROPIC_API_KEY` als Supabase-Secret.
+2. **Session 8/9** — KI-Insights, Benefits/Polish (laut Fahrplan).
+3. **Audit-Phase** (vom Nutzer gewünscht): alle Sessions gemeinsam durchgehen und
+   manuell adjustieren — inkl. Infra-Deploys, die bewusst offen sind:
+   - `supabase db push` für Migrationen 0004 (+ spätere)
+   - Edge Function `onboarding-erinnerungen` deployen, Resend/CRON_SECRET setzen,
+     Vorlagen füllen + aktivieren, Cron einrichten (siehe Function-README)
+   - echte Akademie-Inhalte einpflegen; offene Vertriebsfragen klären
+     (Karrieresystem, Termin-Typen, „Pflicht-Aufgaben je Rolle", Onboarding-Fristen)
+   - GitHub-Push (Token + git-Name) — steht seit Session 3 aus
 
 ## Offen im Dashboard (bewusst später)
 - Struktur-Aggregation über eine ganze Downline (Summe pro Teilbaum) — aktuell
