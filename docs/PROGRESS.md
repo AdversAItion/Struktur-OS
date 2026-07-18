@@ -6,6 +6,25 @@ Stand: 2026-07-18
 
 ## Fertig
 
+### Akademie-Verwaltung (Session 3)
+Master-only UI zum Pflegen der Inhalte **ohne Code** — im Modul `akademie`
+unter `admin/`. Kein neues Schema: die Schreibrechte kommen aus den bestehenden
+`akademie_*_alles_master`-RLS-Policies (0003).
+
+- `admin/api`-Erweiterungen: CRUD für Module/Lektionen/Tests + `reihenfolgeTauschen`
+- `VerwaltungModulListe` (`/akademie/verwaltung`) — Module anlegen/sortieren/löschen
+- `ModulEditor` (`.../modul/:id`) — Stammdaten + `min_role` + Lektionen verwalten
+- `LektionEditor` (`.../lektion/:id`) — Video (YouTube-Erkennung), Markdown mit
+  Vorschau, Tests (dynamische Antwortliste, richtige Antwort per Radio, erzwingt
+  die DB-CHECKs schon im Formular)
+- Zugang über „Verwalten"-Button auf `/akademie`, nur für master
+- Alle Routen `Geschuetzt min_role="master"`; RLS sperrt verbindlich
+- **End-to-End getestet** (Playwright, statefuler PostgREST-Mock): Master legt
+  Modul → Lektion → Video/Markdown → Test an; Fremdschlüssel, `reihenfolge` und
+  Antwort-Index landen korrekt. 22/22 grün. Zusätzlich Gating geprüft:
+  `gp_frisch` sieht keinen Button und wird auf `/akademie/verwaltung` geblockt.
+- Damit lassen sich echte Akademie-Inhalte jetzt einpflegen (offene Vertriebsfrage).
+
 ### Modul `akademie` (Session 2 — Akademie-Player)
 Modulliste → Lektion (Video + Markdown) → Mini-Test → Fortschritt. Läuft komplett
 über die RLS aus Migration `0003` — kein neues Schema nötig.
@@ -143,10 +162,11 @@ Bewusst nicht geraten (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAG
 ---
 
 ## Nächste Steps (laut Fahrplan)
-1. **Session 3 — Akademie-Verwaltung**: Master-Ansicht, um Module/Lektionen/
-   Tests ohne Code anzulegen und `min_role` zu setzen. Erst danach lohnt es,
-   echte Inhalte einzupflegen.
-2. Antworten auf die offenen Vertriebsfragen oben (blockiert v. a. Karrieresystem
-   und Termin-Typen für spätere Sessions).
-3. **Session 4 — Dashboard**: `ziele` + `einheiten` stehen bereits aus Migration
+1. **Echte Akademie-Inhalte einpflegen** — der Player (S2) und die Verwaltung
+   (S3) stehen; jetzt kann der Master über die UI die realen Module/Lektionen/
+   Tests anlegen (braucht Modul-Zuschnitt vom Vertrieb).
+2. **Session 4 — Dashboard**: `ziele` + `einheiten` stehen bereits aus Migration
    `0002`, nur die UI fehlt.
+3. **Session 5 — Kalender & To-dos**: `termine` + `todos` stehen ebenfalls schon.
+4. Antworten auf die offenen Vertriebsfragen oben (blockiert v. a. Karrieresystem
+   und Termin-Typen).

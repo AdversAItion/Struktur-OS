@@ -5,7 +5,7 @@ import { moduleMitFortschrittLaden } from './api'
 import { KATEGORIE_LABEL, type AkademieKategorie, type ModulMitFortschritt } from './types'
 
 export function ModulListe() {
-  const { partner } = useAuth()
+  const { partner, darf } = useAuth()
   const [module, setModule] = useState<ModulMitFortschritt[] | null>(null)
   const [fehler, setFehler] = useState<string | null>(null)
 
@@ -28,7 +28,17 @@ export function ModulListe() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-3xl leading-tight font-extrabold">Akademie</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-display text-3xl leading-tight font-extrabold">Akademie</h1>
+        {darf('master') && (
+          <Link
+            to="/akademie/verwaltung"
+            className="shrink-0 rounded-lg border border-line px-3 py-2 font-display text-sm font-bold text-gold transition-colors hover:border-gold"
+          >
+            Verwalten
+          </Link>
+        )}
+      </div>
       <p className="mt-2 text-sm text-muted">
         Onboarding und Weiterbildung — freigeschaltet nach Rolle.
       </p>

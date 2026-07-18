@@ -19,6 +19,17 @@ const LektionListe = lazy(() =>
 const LektionSeite = lazy(() =>
   import('@/modules/akademie/LektionSeite').then((m) => ({ default: m.LektionSeite })),
 )
+const VerwaltungModulListe = lazy(() =>
+  import('@/modules/akademie/admin/VerwaltungModulListe').then((m) => ({
+    default: m.VerwaltungModulListe,
+  })),
+)
+const ModulEditor = lazy(() =>
+  import('@/modules/akademie/admin/ModulEditor').then((m) => ({ default: m.ModulEditor })),
+)
+const LektionEditor = lazy(() =>
+  import('@/modules/akademie/admin/LektionEditor').then((m) => ({ default: m.LektionEditor })),
+)
 
 /**
  * Alles liegt hinter <Geschuetzt> — ohne Anmeldung erscheint die LoginSeite.
@@ -48,6 +59,31 @@ export default function App() {
             <Route path="/akademie" element={<ModulListe />} />
             <Route path="/akademie/modul/:modulId" element={<LektionListe />} />
             <Route path="/akademie/lektion/:lektionId" element={<LektionSeite />} />
+            {/* Verwaltung — nur master (Route-Gating; die RLS sperrt verbindlich). */}
+            <Route
+              path="/akademie/verwaltung"
+              element={
+                <Geschuetzt min_role="master">
+                  <VerwaltungModulListe />
+                </Geschuetzt>
+              }
+            />
+            <Route
+              path="/akademie/verwaltung/modul/:modulId"
+              element={
+                <Geschuetzt min_role="master">
+                  <ModulEditor />
+                </Geschuetzt>
+              }
+            />
+            <Route
+              path="/akademie/verwaltung/lektion/:lektionId"
+              element={
+                <Geschuetzt min_role="master">
+                  <LektionEditor />
+                </Geschuetzt>
+              }
+            />
             <Route path="/kalender" element={<Kalender />} />
             <Route path="/namensliste" element={<Namensliste />} />
             {/* Unbekannter Pfad -> zurück auf den rollengerechten Einstieg. */}

@@ -64,3 +64,25 @@ export interface ModulMitFortschritt extends AkademieModul {
 export interface LektionMitFortschritt extends AkademieLektion {
   abgeschlossen: boolean
 }
+
+// --- Eingaben für die Verwaltung (Session 3) ---
+// `reihenfolge` und `id` vergibt die API bzw. die DB, nicht das Formular.
+
+export interface ModulEingabe {
+  titel: string
+  beschreibung: string | null
+  min_role: Rolle
+  kategorie: AkademieKategorie
+}
+
+export interface LektionEingabe {
+  titel: string
+  video_url: string | null
+  inhalt_markdown: string | null
+}
+
+export interface TestEingabe {
+  frage: string
+  antworten: string[]
+  richtige_antwort: number
+}

@@ -36,9 +36,36 @@ beantwortet sind (strikt, kein Teilbestehen). Ohne Tests reicht ein Klick auf
 > die Lektion sehen darf — kein Server-seitiges Verstecken. Für eine interne
 > Lern-Akademie ist das in Ordnung, siehe Kommentar in der Migration.
 
+## Verwaltung (`admin/`) — nur master
+Master-UI zum Pflegen der Inhalte, ohne Code (Session 3). Erreichbar über den
+„Verwalten"-Button auf `/akademie` (nur für master sichtbar).
+
+- `/akademie/verwaltung` → `VerwaltungModulListe.tsx` — Module anlegen,
+  sortieren (↑/↓ innerhalb der Kategorie), löschen
+- `/akademie/verwaltung/modul/:id` → `ModulEditor.tsx` — Modul-Stammdaten
+  (Titel, Beschreibung, Kategorie, `min_role`) + Lektionen anlegen/sortieren/löschen
+- `/akademie/verwaltung/lektion/:id` → `LektionEditor.tsx` — Video-Link (mit
+  YouTube-Erkennung), Markdown (mit Vorschau) + Tests (Frage, dynamische
+  Antwortliste, richtige Antwort per Radio)
+- `admin/felder.tsx` — geteilte Formularfelder (Feld, Textbereich, Auswahl,
+  MiniButton), damit die drei Editoren nicht dieselben Klassen wiederholen
+
+Alle Routen sind mit `Geschuetzt min_role="master"` gesperrt (UI-Gating). Die
+**verbindliche** Sperre sind die `akademie_*_alles_master`-RLS-Policies aus 0003:
+ein Nicht-Master bekommt vom Server einen Fehler, egal was das UI zulässt.
+
+Das Test-Formular erzwingt clientseitig, was die DB-CHECKs verlangen: mindestens
+zwei nicht-leere Antworten und ein gültiger `richtige_antwort`-Index — sonst käme
+nur eine kryptische Postgres-Meldung zurück.
+
 ## API (`api.ts`)
-`moduleMitFortschrittLaden` · `modulLaden` · `lektionenMitFortschrittLaden` ·
+Player: `moduleMitFortschrittLaden` · `modulLaden` · `lektionenMitFortschrittLaden` ·
 `lektionLaden` · `testsLaden` · `eigenenFortschrittLaden` · `lektionAbschliessen`
+
+Verwaltung (master): `alleModuleLaden` · `lektionenLaden` · `modulAnlegen` ·
+`modulAktualisieren` · `modulLoeschen` · `lektionAnlegen` · `lektionAktualisieren` ·
+`lektionLoeschen` · `testAnlegen` · `testAktualisieren` · `testLoeschen` ·
+`reihenfolgeTauschen`
 
 Komponenten importieren **nie** `supabase` direkt (CLAUDE.md, Merge-Regel 3).
 
@@ -56,7 +83,7 @@ Komponenten importieren **nie** `supabase` direkt (CLAUDE.md, Merge-Regel 3).
 - `react-router-dom`
 
 ## Offen
-- Es gibt noch keine Verwaltungs-UI für Module/Lektionen/Tests — Inhalte kommen
-  aktuell nur per SQL/Seed rein. Kommt als eigene Session („Akademie-Verwaltung").
-- Mehrere Tests pro Lektion sind vom Schema gedeckt und im Player unterstützt,
-  aber noch nicht mit echtem Inhalt geprüft (Seed hat nur 1 Test pro Lektion).
+- Sortieren läuft über ↑/↓-Buttons (zwei Einzel-Updates). Drag-and-drop wäre
+  schöner, aber für einen Master als einzigen Nutzer unnötig.
+- Kein Rich-Text-Editor für Markdown — bewusst Roh-Markdown mit Live-Vorschau.
+- Bild-Uploads (Storage) für Lektionsinhalte noch nicht angebunden.

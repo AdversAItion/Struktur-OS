@@ -4,8 +4,11 @@ import type {
   AkademieLektion,
   AkademieModul,
   AkademieTest,
+  LektionEingabe,
   LektionMitFortschritt,
+  ModulEingabe,
   ModulMitFortschritt,
+  TestEingabe,
 } from './types'
 
 /**
@@ -151,4 +154,143 @@ async function abgeschlosseneLektionIds(
     .in('lektion_id', lektionIds)
   if (error) throw new Error(error.message)
   return new Set((data ?? []).map((f) => f.lektion_id as string))
+}
+
+// ===========================================================================
+// Verwaltung (Session 3) — nur für master.
+//
+// Die Schreibrechte kommen ausschliesslich aus den RLS-Policies
+// `akademie_*_alles_master` (0003_akademie.sql): ein Nicht-Master bekommt hier
+// vom Server einen Fehler, egal was das UI zulässt. Das UI-Gating (Route +
+// Nav) ist nur Kosmetik.
+// ===========================================================================
+
+/** Alle Module (master sieht per RLS alle), sortiert wie im Player. */
+export async function alleModuleLaden(): Promise<AkademieModul[]> {
+  const { data, error } = await supabase
+    .from('akademie_module')
+    .select('*')
+    .order('kategorie')
+    .order('reihenfolge')
+  if (error) throw new Error(error.message)
+  return (data ?? []) as AkademieModul[]
+}
+
+/** Lektionen eines Moduls, sortiert — ohne Fortschritt (für die Verwaltung). */
+export async function lektionenLaden(modulId: string): Promise<AkademieLektion[]> {
+  const { data, error } = await supabase
+    .from('akademie_lektionen')
+    .select('*')
+    .eq('modul_id', modulId)
+    .order('reihenfolge')
+  if (error) throw new Error(error.message)
+  return (data ?? []) as AkademieLektion[]
+}
+
+export async function modulAnlegen(eingabe: ModulEingabe): Promise<AkademieModul> {
+  const reihenfolge = await naechsteReihenfolge('akademie_module', 'kategorie', eingabe.kategorie)
+  const { data, error } = await supabase
+    .from('akademie_module')
+    .insert({ ...eingabe, reihenfolge })
+    .select('*')
+    .single()
+  if (error) throw new Error(error.message)
+  return data as AkademieModul
+}
+
+export async function modulAktualisieren(
+  id: string,
+  eingabe: ModulEingabe,
+): Promise<void> {
+  const { error } = await supabase.from('akademie_module').update(eingabe).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function modulLoeschen(id: string): Promise<void> {
+  // Lektionen und Tests hängen per ON DELETE CASCADE dran (0003).
+  const { error } = await supabase.from('akademie_module').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function lektionAnlegen(
+  modulId: string,
+  eingabe: LektionEingabe,
+): Promise<AkademieLektion> {
+  const reihenfolge = await naechsteReihenfolge('akademie_lektionen', 'modul_id', modulId)
+  const { data, error } = await supabase
+    .from('akademie_lektionen')
+    .insert({ ...eingabe, modul_id: modulId, reihenfolge })
+    .select('*')
+    .single()
+  if (error) throw new Error(error.message)
+  return data as AkademieLektion
+}
+
+export async function lektionAktualisieren(
+  id: string,
+  eingabe: LektionEingabe,
+): Promise<void> {
+  const { error } = await supabase.from('akademie_lektionen').update(eingabe).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function lektionLoeschen(id: string): Promise<void> {
+  const { error } = await supabase.from('akademie_lektionen').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function testAnlegen(
+  lektionId: string,
+  eingabe: TestEingabe,
+): Promise<AkademieTest> {
+  const { data, error } = await supabase
+    .from('akademie_tests')
+    .insert({ ...eingabe, lektion_id: lektionId })
+    .select('*')
+    .single()
+  if (error) throw new Error(error.message)
+  return data as AkademieTest
+}
+
+export async function testAktualisieren(id: string, eingabe: TestEingabe): Promise<void> {
+  const { error } = await supabase.from('akademie_tests').update(eingabe).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function testLoeschen(id: string): Promise<void> {
+  const { error } = await supabase.from('akademie_tests').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+/**
+ * Tauscht die `reihenfolge` zweier Zeilen — für Hoch/Runter-Buttons.
+ * Zwei einzelne Updates (kein DB-seitiges Swap): für ein internes Verwaltungs-
+ * Tool mit einem Master als Nutzer reicht das; ein Zwischenzustand ist unkritisch.
+ */
+export async function reihenfolgeTauschen(
+  tabelle: 'akademie_module' | 'akademie_lektionen',
+  a: { id: string; reihenfolge: number },
+  b: { id: string; reihenfolge: number },
+): Promise<void> {
+  const erste = await supabase.from(tabelle).update({ reihenfolge: b.reihenfolge }).eq('id', a.id)
+  if (erste.error) throw new Error(erste.error.message)
+  const zweite = await supabase.from(tabelle).update({ reihenfolge: a.reihenfolge }).eq('id', b.id)
+  if (zweite.error) throw new Error(zweite.error.message)
+}
+
+/** Höchste `reihenfolge` innerhalb einer Gruppe + 1, damit Neues hinten landet. */
+async function naechsteReihenfolge(
+  tabelle: 'akademie_module' | 'akademie_lektionen',
+  gruppeSpalte: 'kategorie' | 'modul_id',
+  gruppeWert: string,
+): Promise<number> {
+  const { data, error } = await supabase
+    .from(tabelle)
+    .select('reihenfolge')
+    .eq(gruppeSpalte, gruppeWert)
+    .order('reihenfolge', { ascending: false })
+    .limit(1)
+  if (error) throw new Error(error.message)
+  const hoechste = data && data.length > 0 ? (data[0].reihenfolge as number) : -1
+  return hoechste + 1
 }
