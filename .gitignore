@@ -34,3 +34,6 @@ supabase/.branches
 
 # Netlify
 .netlify
+
+# Claude Code — git-Worktrees von Hintergrund-Agenten (transient)
+.claude/worktrees/
