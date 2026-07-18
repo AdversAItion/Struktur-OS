@@ -1,6 +1,6 @@
 # Datenbank-Schema
 
-Stand: Migrationen `0001` – `0004`.
+Stand: Migrationen `0001` – `0005`.
 **Nach jeder Migration diese Datei aktualisieren** (CLAUDE.md, Merge-Regel 2).
 
 Alle Schema-Änderungen laufen über SQL-Dateien in `supabase/migrations/` —
@@ -12,6 +12,7 @@ nie manuell im Supabase-Dashboard klicken.
 | `0002_struktur_und_vertrieb.sql` | Rekursive Struktur-Sicht, `ziele`, `einheiten`, `termine`, `todos`, `onboarding_trigger` |
 | `0003_akademie.sql` | `akademie_module`, `akademie_lektionen`, `akademie_tests`, `akademie_fortschritt` |
 | `0004_onboarding_erinnerungen.sql` | `onboarding_trigger.erinnerung_gesendet_am`, Tabelle `onboarding_vorlagen` (Edge-Function-Automatik) |
+| `0005_namensliste.sql` | Tabelle `kontakte` (Namensliste mit ABC-Kategorie) |
 
 ---
 
@@ -326,6 +327,29 @@ UNIQUE `(partner_id, lektion_id)`.
 
 ---
 
+## Tabelle: `kontakte` (0005)
+
+Die Namensliste — Menschen aus dem Umfeld eines Partners. Ein neuer GP baut sie
+über das KI-Interview (Edge Function `namensliste-interview`) auf.
+
+| Spalte | Typ | Notiz |
+|---|---|---|
+| `id` | `uuid` PK | |
+| `partner_id` | `uuid` NOT NULL | → `partner(id)`, cascade — der Besitzer der Liste |
+| `name` | `text` NOT NULL | nicht leer |
+| `kategorie` | `text` NOT NULL | Default `B`; CHECK `A` \| `B` \| `C` (A = eng, C = lose) |
+| `beziehung` | `text` NULL | woher man sich kennt |
+| `telefon` | `text` NULL | |
+| `notiz` | `text` NULL | |
+| `status` | `text` NOT NULL | Default `offen`; CHECK `offen` \| `kontaktiert` |
+| `created_at` / `updated_at` | `timestamptz` NOT NULL | |
+
+Index `(partner_id, kategorie)`.
+
+RLS: eigene CRUD; Struktur (Rang ≥ 30) liest mit; master alles.
+
+---
+
 ## Getestet
 
 Migrationen `0001`–`0003` und `seed.sql` wurden gegen echtes Postgres 18
@@ -340,19 +364,20 @@ eingespielt (lokaler Wegwerf-Cluster mit nachgebautem `auth.users` und
 - Ein GP kann sich keine Einheiten eintragen.
 - Die Zyklus-Bremse fängt einen Ring in der Upline-Kette ab (1 ms statt Hänger).
 
-Migration `0004` separat gegen echtes Postgres geprüft (8 Tests): Spalte + Tabelle
-angelegt, 4 inaktive Vorlagen-Platzhalter, CHECK auf `trigger_typ`, die Cron-Abfrage
-liefert nur fällige/offene/ungesendete Trigger, Idempotenz nach dem Markieren, und
-die RLS sperrt `gp_frisch` von `onboarding_vorlagen`.
+Migration `0004` separat gegen echtes Postgres geprüft (8 Tests): Cron-Abfrage,
+Idempotenz, CHECK auf `trigger_typ`, RLS auf `onboarding_vorlagen`.
+
+Migration `0005` separat gegen echtes Postgres geprüft (8 Tests): Tabelle
+`kontakte`, CHECKs (Kategorie, leerer Name), und die RLS (eigene CRUD, kein Anlegen
+für Fremde, Struktur/master liest mit, Fremd-GP gesperrt).
 
 **Noch nicht gegen echtes Supabase getestet.** Der Stub bildet `auth.uid()` nach,
-nicht die echte GoTrue-Auth. `0004` ist zudem noch **nicht gepusht** (kommt in der
-Audit-/Deploy-Phase). Nach `supabase db push` einmal live gegenprüfen.
+nicht die echte GoTrue-Auth. `0004`/`0005` sind zudem noch **nicht gepusht** (kommt
+in der Audit-/Deploy-Phase). Nach `supabase db push` einmal live gegenprüfen.
 
 ---
 
 ## Offen
-- **Namensliste** — Tabellen noch nicht entworfen, braucht eigene Migration.
 - **Karrieresystem** — was `gp_frisch` von `gp_stufe2` trennt (Kriterium oder
   manuelle Freischaltung), ist noch offen. Ebenso, ob `stufe` künftig Rechte steuert.
 - **Akademie-Inhalte** — Modul-Zuschnitt und Rollen-Zuordnung kommen vom Vertrieb.

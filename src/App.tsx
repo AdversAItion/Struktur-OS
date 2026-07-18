@@ -4,7 +4,6 @@ import { AuthProvider } from '@/modules/auth/AuthProvider'
 import { Geschuetzt } from '@/modules/auth/Geschuetzt'
 import { AppShell } from '@/components/AppShell'
 import { StartWeiterleitung } from '@/seiten/StartWeiterleitung'
-import { Namensliste } from '@/seiten/Namensliste'
 
 // Lazy: zieht react-markdown/remark-gfm nach, das soll nicht im Hauptbundle
 // landen — 90 % der Nutzung ist mobil (CLAUDE.md).
@@ -36,6 +35,9 @@ const LektionEditor = lazy(() =>
 )
 const KalenderSeite = lazy(() =>
   import('@/modules/kalender/KalenderSeite').then((m) => ({ default: m.KalenderSeite })),
+)
+const NamenslisteSeite = lazy(() =>
+  import('@/modules/namensliste/NamenslisteSeite').then((m) => ({ default: m.NamenslisteSeite })),
 )
 
 /**
@@ -100,7 +102,7 @@ export default function App() {
               }
             />
             <Route path="/kalender" element={<KalenderSeite />} />
-            <Route path="/namensliste" element={<Namensliste />} />
+            <Route path="/namensliste" element={<NamenslisteSeite />} />
             {/* Unbekannter Pfad -> zurück auf den rollengerechten Einstieg. */}
             <Route path="*" element={<StartWeiterleitung />} />
           </Route>

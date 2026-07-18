@@ -6,6 +6,28 @@ Stand: 2026-07-18
 
 ## Fertig
 
+### Modul `namensliste` + KI-Interview (Session 7)
+Ein neuer GP baut seine Namensliste über ein geführtes KI-Interview auf und pflegt
+Kontakte mit ABC-Kategorie — „ohne euch".
+
+- **Migration 0005**: Tabelle `kontakte` (Name, ABC-Kategorie, Beziehung, Telefon,
+  Notiz, Status) mit RLS (eigene CRUD, Struktur liest mit, master alles).
+- **Edge Function** `namensliste-interview` (Deno + **Anthropic-SDK**): geführtes
+  Interview, Frage für Frage. Reine Logik (`logik.ts`) getrennt vom Handler.
+  Modell-Default `claude-opus-4-8`, per Env `ANTHROPIC_MODELL` übersteuerbar;
+  System-Prompt als Cache-Prefix, `effort: low`, `refusal`-Guard, CORS. Der
+  `ANTHROPIC_API_KEY` lebt als Supabase-Secret, nie im Frontend.
+- **Frontend** `src/modules/namensliste/`: Tabs „Liste" (Kontakte nach A/B/C,
+  Kategorie/Status ändern, löschen) und „KI-Interview" (Chat + Schnell-Hinzufügen).
+  Ersetzt den Platzhalter `src/seiten/Namensliste.tsx`.
+- **Verifiziert**: Migration 0005 gegen echtes Postgres (8/8 — CHECKs + RLS).
+  Deno: `deno check` (inkl. Anthropic-SDK) sauber, `deno test` 7/7. Frontend
+  Build/Lint grün, Playwright-E2E 16/16 (Kontakte-CRUD + Interview mit gemockter
+  Function).
+- **Bewusst nicht live**: Interview nicht real gegen Anthropic getestet — braucht
+  Deploy + `ANTHROPIC_API_KEY` (Audit-Phase, siehe Function-README). Die KI
+  erfindet keine Kontakte (System-Prompt); der GP trägt Namen selbst ein.
+
 ### Workflows — Onboarding-Erinnerungen (Session 6)
 Automatische Erinnerungen: täglicher Cron liest fällige `onboarding_trigger` und
 schickt je `trigger_typ` eine Resend-Mail mit Tutorial-Link an den Partner.
@@ -259,15 +281,15 @@ Bewusst nicht geraten (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAG
 ---
 
 ## Nächste Steps (laut Fahrplan)
-1. **Session 7 — KI-Namensliste**: geführtes Interview über eine Edge Function
-   (Anthropic API), Kontakte mit ABC-Kategorie speichern. Braucht eigene Migration
-   (Tabellen) + `ANTHROPIC_API_KEY` als Supabase-Secret.
-2. **Session 8/9** — KI-Insights, Benefits/Polish (laut Fahrplan).
+1. **Session 8 — KI-Insights**: Edge Function analysiert Ziele vs. Ist und schreibt
+   Handlungsempfehlungen ins Master-Dashboard.
+2. **Session 9** — Benefits/Polish (Three.js-Showpiece, Feinschliff).
 3. **Audit-Phase** (vom Nutzer gewünscht): alle Sessions gemeinsam durchgehen und
    manuell adjustieren — inkl. Infra-Deploys, die bewusst offen sind:
-   - `supabase db push` für Migrationen 0004 (+ spätere)
-   - Edge Function `onboarding-erinnerungen` deployen, Resend/CRON_SECRET setzen,
-     Vorlagen füllen + aktivieren, Cron einrichten (siehe Function-README)
+   - `supabase db push` für Migrationen 0004/0005 (+ spätere)
+   - Edge Functions deployen + Secrets setzen:
+     - `onboarding-erinnerungen`: Resend/CRON_SECRET, Vorlagen füllen + aktivieren, Cron
+     - `namensliste-interview`: `ANTHROPIC_API_KEY` (opt. `ANTHROPIC_MODELL`)
    - echte Akademie-Inhalte einpflegen; offene Vertriebsfragen klären
      (Karrieresystem, Termin-Typen, „Pflicht-Aufgaben je Rolle", Onboarding-Fristen)
    - GitHub-Push (Token + git-Name) — steht seit Session 3 aus
