@@ -4,7 +4,6 @@ import { AuthProvider } from '@/modules/auth/AuthProvider'
 import { Geschuetzt } from '@/modules/auth/Geschuetzt'
 import { AppShell } from '@/components/AppShell'
 import { StartWeiterleitung } from '@/seiten/StartWeiterleitung'
-import { Dashboard } from '@/seiten/Dashboard'
 import { Kalender } from '@/seiten/Kalender'
 import { Namensliste } from '@/seiten/Namensliste'
 
@@ -18,6 +17,12 @@ const LektionListe = lazy(() =>
 )
 const LektionSeite = lazy(() =>
   import('@/modules/akademie/LektionSeite').then((m) => ({ default: m.LektionSeite })),
+)
+const DashboardSeite = lazy(() =>
+  import('@/modules/dashboard/DashboardSeite').then((m) => ({ default: m.DashboardSeite })),
+)
+const PartnerDetail = lazy(() =>
+  import('@/modules/dashboard/PartnerDetail').then((m) => ({ default: m.PartnerDetail })),
 )
 const VerwaltungModulListe = lazy(() =>
   import('@/modules/akademie/admin/VerwaltungModulListe').then((m) => ({
@@ -52,7 +57,15 @@ export default function App() {
               path="/dashboard"
               element={
                 <Geschuetzt min_role="fuehrungskraft">
-                  <Dashboard />
+                  <DashboardSeite />
+                </Geschuetzt>
+              }
+            />
+            <Route
+              path="/dashboard/partner/:partnerId"
+              element={
+                <Geschuetzt min_role="fuehrungskraft">
+                  <PartnerDetail />
                 </Geschuetzt>
               }
             />

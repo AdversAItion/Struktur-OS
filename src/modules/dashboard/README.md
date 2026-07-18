@@ -1,0 +1,61 @@
+# Modul: dashboard
+
+## Zweck
+„Wer liefert, wer hängt" — Master und Führungskraft sehen pro Monat und Partner
+das Ist gegen das Soll (Einheiten) und den Akademie-Fortschritt. Der Master trägt
+Ziele ein und erfasst Einheiten.
+
+## Tabellen
+`ziele` · `einheiten` (0002) · gelesen: `partner`, `akademie_module`,
+`akademie_lektionen`, `akademie_fortschritt` (0003). Siehe
+[docs/SCHEMA.md](../../../docs/SCHEMA.md).
+
+## Rechte — kommen aus der RLS (0002), nicht aus dem UI
+- **Lesen**: master alles, Führungskraft ihre Downline, sonst nur eigene Zeile.
+- **Einheiten schreiben**: nur master (`einheiten_alles_master`).
+- **Ziele schreiben**: nur master oder der Partner selbst (`ziele_*_eigene` /
+  `ziele_alles_master`) — eine Führungskraft kann Ziele der Downline **nicht**
+  setzen.
+
+Das Dashboard spiegelt das: Erfassen/Eintragen erscheint nur für master
+(`darf('master')`). Die Routen sind `Geschuetzt min_role="fuehrungskraft"`; die
+verbindliche Sperre ist die RLS.
+
+## Seiten (Routen in `App.tsx`)
+- `/dashboard` → `DashboardSeite.tsx` — Team-Übersicht mit Monats-Navigation.
+  Einheiten Ist/Soll + Akademie pro Partner. Eigene Zeile ist ausgeblendet.
+  Ein roter „0 Einheiten"-Marker zeigt, wer bei gesetztem Ziel noch nichts hat.
+- `/dashboard/partner/:id?monat=YYYY-MM` → `PartnerDetail.tsx` — Ist-Summe,
+  Ziel-Formular (master) bzw. Ziel-Anzeige (Führungskraft), Einheiten-Liste;
+  master kann Einheiten erfassen und löschen.
+
+Der Monat wird als `?monat=YYYY-MM` in der URL geführt und zwischen Übersicht und
+Detail durchgereicht.
+
+## Nur echte Zahlen
+Ist-Werte gibt es nur, wo eine echte Quelle existiert: **Einheiten** (Summe aus
+`einheiten`) und **Akademie** (abgeschlossene vs. für die Rolle verfügbare
+Lektionen). Für **Neuanmeldungen** gibt es (noch) keine Ist-Quelle — deshalb
+erscheint dafür bewusst kein Ist, nur das Ziel (CLAUDE.md: keine erfundenen Zahlen).
+
+## API (`api.ts`)
+`monatsUebersichtLaden` · `partnerLaden` · `zielLaden` · `zielSpeichern` ·
+`einheitenLaden` · `einheitErfassen` · `einheitLoeschen`
+
+Numerik-Hinweis: `numeric`-Spalten (`ziel_einheiten`, `anzahl`) kommen als String
+aus PostgREST — die API wandelt sie via `Number(...)` um.
+
+## Sonstiges
+- `monat.ts` — reine Monats-Helfer (`YYYY-MM`), für sich testbar.
+- `format.ts` — deutsche Dezimal-/Datumsformatierung.
+
+## Abhängigkeiten
+- `@/lib/supabase`, `@supabase/supabase-js`
+- `@/modules/auth` (Partner, Rolle/Rang, `useAuth`)
+- `react-router-dom`
+
+## Offen
+- Termine-Ist (Zahl der Termine im Monat) ist noch nicht angebunden — kommt mit
+  dem Kalender-Modul (Session 5).
+- Struktur-Aggregation (Summe über eine ganze Downline) gibt es noch nicht; die
+  Übersicht ist pro Partner, nicht pro Teilbaum.

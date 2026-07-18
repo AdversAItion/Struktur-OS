@@ -14,7 +14,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const neuLaden = useCallback(async () => {
     const session = await sessionLaden()
-    setPartner(session ? await eigenenPartnerLaden() : null)
+    setPartner(session ? await eigenenPartnerLaden(session.user.id) : null)
   }, [])
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPartner(null)
         return
       }
-      void eigenenPartnerLaden().then((p) => {
+      void eigenenPartnerLaden(session.user.id).then((p) => {
         if (!abgebrochen) setPartner(p)
       })
     })

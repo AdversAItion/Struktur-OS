@@ -46,7 +46,12 @@ Alle Aufrufe gegen Supabase laufen hier durch. Komponenten importieren **nie**
 `supabase` direkt — so lässt sich das Modul in eine andere App transplantieren.
 
 `anmelden` · `abmelden` · `sessionLaden` · `aufSessionWechselHoeren` ·
-`eigenenPartnerLaden`
+`eigenenPartnerLaden(userId)`
+
+> `eigenenPartnerLaden` filtert **explizit** nach `user_id` — nicht auf die RLS
+> als Selektor verlassen. Master und Führungskraft sehen per RLS mehrere
+> partner-Zeilen; ohne den Filter würde `.maybeSingle()` mit PGRST116 brechen,
+> sobald mehr als der eigene Account existiert.
 
 ## Abhängigkeiten
 - `@/lib/supabase` (Client)

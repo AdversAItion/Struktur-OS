@@ -41,11 +41,19 @@ export function aufSessionWechselHoeren(
   return () => data.subscription.unsubscribe()
 }
 
-/** Lädt die partner-Zeile des angemeldeten Users. RLS filtert auf die eigene Zeile. */
-export async function eigenenPartnerLaden(): Promise<Partner | null> {
+/**
+ * Lädt die partner-Zeile des angemeldeten Users.
+ *
+ * WICHTIG: explizit nach `user_id` filtern, NICHT auf die RLS als Selektor
+ * verlassen. Für master (sieht alle) und Führungskraft (sieht ihre Downline)
+ * liefert `partner` sonst mehrere Zeilen, und `maybeSingle()` würde mit
+ * PGRST116 brechen. Die RLS ist die Sperre, der Filter ist die Auswahl.
+ */
+export async function eigenenPartnerLaden(userId: string): Promise<Partner | null> {
   const { data, error } = await supabase
     .from('partner')
     .select('*')
+    .eq('user_id', userId)
     .maybeSingle()
 
   if (error) throw new Error(error.message)

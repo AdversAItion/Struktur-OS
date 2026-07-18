@@ -6,6 +6,31 @@ Stand: 2026-07-18
 
 ## Fertig
 
+### Modul `dashboard` (Session 4)
+„Wer liefert, wer hängt" — Master + Führungskraft sehen pro Monat/Partner das Ist
+gegen Soll. Kein neues Schema: nutzt `ziele`/`einheiten` (0002) + Akademie-Fortschritt.
+
+- `monat.ts` — reine Monats-Helfer (`YYYY-MM`), Logik-getestet inkl. Jahresgrenzen
+- `api.ts` — Monatsübersicht (Ist-Summe + Ziel + Akademie verfügbar/abgeschlossen),
+  Ziel-Upsert, Einheit erfassen/löschen; wandelt numeric-Strings via `Number(...)`
+- `DashboardSeite` (`/dashboard`) — Team-Übersicht mit Monats-Nav, eigene Zeile
+  ausgeblendet, roter „0 Einheiten"-Marker bei gesetztem Ziel ohne Ist
+- `PartnerDetail` (`/dashboard/partner/:id?monat=`) — Ist-Summe, Ziel-Formular
+  (master) bzw. -Anzeige (FK), Einheiten erfassen/löschen (master)
+- Rechte streng nach RLS (0002): Einheiten schreibt nur master, Ziele nur master
+  oder der Partner selbst — FK sieht read-only
+- Nur echte Ist-Zahlen (Einheiten, Akademie); für Neuanmeldungen bewusst kein Ist
+- **End-to-end getestet** (Playwright, statefuler Mock): Übersicht (4/12, Akademie
+  2/3 bzw. 1/2), Ziel-Upsert, Einheit erfassen → Ist steigt → löschen → Ist sinkt.
+  16/16 grün.
+
+**Nebenbei ein echter Bug gefixt:** `eigenenPartnerLaden` (auth) lud die eigene
+partner-Zeile ohne `user_id`-Filter und verließ sich auf die RLS. Für master und
+Führungskraft liefert die RLS aber mehrere Zeilen → `.maybeSingle()` wäre mit
+PGRST116 gebrochen, sobald mehr als ein Partner existiert. In Produktion (bisher
+nur 1 Partner) noch nicht aufgetreten, aber ein sicherer Login-Ausfall, sobald
+eine Struktur da ist. Jetzt filtert die Funktion explizit nach `user_id`.
+
 ### Akademie-Verwaltung (Session 3)
 Master-only UI zum Pflegen der Inhalte **ohne Code** — im Modul `akademie`
 unter `admin/`. Kein neues Schema: die Schreibrechte kommen aus den bestehenden
@@ -162,11 +187,15 @@ Bewusst nicht geraten (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAG
 ---
 
 ## Nächste Steps (laut Fahrplan)
-1. **Echte Akademie-Inhalte einpflegen** — der Player (S2) und die Verwaltung
-   (S3) stehen; jetzt kann der Master über die UI die realen Module/Lektionen/
-   Tests anlegen (braucht Modul-Zuschnitt vom Vertrieb).
-2. **Session 4 — Dashboard**: `ziele` + `einheiten` stehen bereits aus Migration
-   `0002`, nur die UI fehlt.
-3. **Session 5 — Kalender & To-dos**: `termine` + `todos` stehen ebenfalls schon.
-4. Antworten auf die offenen Vertriebsfragen oben (blockiert v. a. Karrieresystem
+1. **Session 5 — Kalender & To-dos**: `termine` + `todos` stehen aus Migration
+   `0002`; das Dashboard kann dann das Termine-Ist anbinden.
+2. **Echte Akademie-Inhalte einpflegen** — Player (S2) + Verwaltung (S3) stehen;
+   der Master kann jetzt über die UI reale Module/Lektionen/Tests anlegen
+   (braucht Modul-Zuschnitt vom Vertrieb).
+3. Antworten auf die offenen Vertriebsfragen oben (blockiert v. a. Karrieresystem
    und Termin-Typen).
+
+## Offen im Dashboard (bewusst später)
+- Termine-Ist (Zahl der Termine im Monat) — kommt mit Session 5.
+- Struktur-Aggregation über eine ganze Downline (Summe pro Teilbaum) — aktuell
+  ist die Übersicht pro Partner.
