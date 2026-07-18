@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/kontext'
 import { ROLLEN_LABEL } from '@/modules/auth/types'
 import { monatsUebersichtLaden } from './api'
+import { InsightsPanel } from './InsightsPanel'
 import { aktuellerMonat, monatLabel, monatVerschieben } from './monat'
 import { dezimal } from './format'
 import type { PartnerUebersicht } from './types'
@@ -65,6 +66,8 @@ export function DashboardSeite() {
           →
         </button>
       </div>
+
+      <InsightsPanel monat={monat} />
 
       {fehler && (
         <p role="alert" className="mt-4 text-sm text-red-400">

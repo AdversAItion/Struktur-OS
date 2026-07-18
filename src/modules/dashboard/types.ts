@@ -46,3 +46,18 @@ export interface PartnerUebersicht {
   lektionenAbgeschlossen: number
   lektionenVerfuegbar: number
 }
+
+export type Prioritaet = 'hoch' | 'mittel' | 'niedrig'
+
+/** Eine system-generierte Handlungsempfehlung (Session 8, Tabelle `insights`). */
+export interface Insight {
+  id: string
+  partner_id: string
+  monat: string
+  typ: string
+  prioritaet: Prioritaet
+  fakt: string
+  empfehlung: string
+  erledigt: boolean
+  erstellt_am: string
+}

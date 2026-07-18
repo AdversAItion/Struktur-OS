@@ -32,6 +32,10 @@ verbindliche Sperre ist die RLS.
 Der Monat wird als `?monat=YYYY-MM` in der URL geführt und zwischen Übersicht und
 Detail durchgereicht.
 
+`InsightsPanel.tsx` (oben in der Übersicht) zeigt die KI-Handlungsempfehlungen aus
+Tabelle `insights` (Session 8, Edge Function `insights-generieren`) — priorisiert,
+einzeln „erledigt"-bar. Sichtbar nur für Führungskraft/master (RLS 0006).
+
 ## Nur echte Zahlen
 Ist-Werte gibt es nur, wo eine echte Quelle existiert: **Einheiten** (Summe aus
 `einheiten`), **Termine** (Zahl der `termine`-Zeilen im Monat, alle Status —
@@ -41,7 +45,8 @@ erscheint dafür bewusst kein Ist, nur das Ziel (CLAUDE.md: keine erfundenen Zah
 
 ## API (`api.ts`)
 `monatsUebersichtLaden` · `partnerLaden` · `zielLaden` · `zielSpeichern` ·
-`einheitenLaden` · `einheitErfassen` · `einheitLoeschen`
+`einheitenLaden` · `einheitErfassen` · `einheitLoeschen` ·
+`insightsLaden` · `insightErledigen` (Session 8)
 
 Numerik-Hinweis: `numeric`-Spalten (`ziel_einheiten`, `ziel_termine`, `anzahl`)
 kommen als String aus PostgREST — die API wandelt sie via `Number(...)` um.

@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { ROLLEN_RANG, type Partner, type Rolle } from '@/modules/auth/types'
 import { monatsBereich, monatZuIso } from './monat'
-import type { Einheit, PartnerUebersicht, Ziel, ZielEingabe } from './types'
+import type { Einheit, Insight, PartnerUebersicht, Ziel, ZielEingabe } from './types'
 
 /**
  * Gesamte Dashboard-Logik. Komponenten rufen nur diese Funktionen auf — kein
@@ -47,6 +47,28 @@ export async function monatsUebersichtLaden(monat: string): Promise<PartnerUeber
       }
     })
     .sort((a, b) => a.partner.name.localeCompare(b.partner.name, 'de'))
+}
+
+/**
+ * Offene Insights (Handlungsempfehlungen) für einen Monat. Die RLS (0006) gibt
+ * einer Führungskraft nur die ihrer Struktur, dem master alle. Ein GP bekommt
+ * keine — Insights sind ein Coaching-Werkzeug für die Führung.
+ */
+export async function insightsLaden(monat: string): Promise<Insight[]> {
+  const { data, error } = await supabase
+    .from('insights')
+    .select('*')
+    .eq('monat', monatZuIso(monat))
+    .eq('erledigt', false)
+    .order('prioritaet')
+    .order('erstellt_am', { ascending: false })
+  if (error) throw new Error(error.message)
+  return (data ?? []) as Insight[]
+}
+
+export async function insightErledigen(id: string): Promise<void> {
+  const { error } = await supabase.from('insights').update({ erledigt: true }).eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 export async function partnerLaden(id: string): Promise<Partner | null> {

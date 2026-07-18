@@ -6,6 +6,27 @@ Stand: 2026-07-18
 
 ## Fertig
 
+### KI-Insights fürs Master-Dashboard (Session 8)
+Eine Edge Function analysiert Ziel vs. Ist pro Partner und schreibt priorisierte
+Handlungsempfehlungen ins Dashboard („Danny: 0 Einheiten bei Ziel 400 → eingreifen").
+
+- **Migration 0006**: Tabelle `insights` (Fakt + Empfehlung + Priorität pro
+  Partner/Monat/Typ) mit RLS — Führungskraft sieht ihre Struktur, master alle,
+  ein GP keine (Coaching-Werkzeug der Führung).
+- **Edge Function** `insights-generieren` (Deno): **deterministische Regel-Engine**
+  (`logik.ts`) bildet die Signale aus echten Daten; die KI verfeinert optional nur
+  die Formulierung (fällt sie aus, bleiben die Vorlagentexte). service_role,
+  CRON_SECRET, idempotent (Tagesbild).
+- **Dashboard**: `InsightsPanel` oben in der Übersicht — priorisierte Empfehlungen
+  (roter Punkt = hoch), einzeln „erledigt"-bar. `dashboard/api.ts` um
+  `insightsLaden`/`insightErledigen` erweitert.
+- **Verifiziert**: Migration 0006 gegen echtes Postgres (10/10 — CHECKs + RLS);
+  `deno test` 11/11 (Regel-Engine) + `deno check` sauber; Frontend Build/Lint grün;
+  Playwright-E2E 8/8 (Panel zeigt Insights, erledigen entfernt sie).
+- **Bewusst offen**: 0006 nicht gepusht, Function nicht deployed, keine echte
+  KI-Verfeinerung getestet (Audit-Phase, siehe Function-README). Schwellenwerte
+  der Regeln mit dem Vertrieb kalibrieren.
+
 ### Modul `namensliste` + KI-Interview (Session 7)
 Ein neuer GP baut seine Namensliste über ein geführtes KI-Interview auf und pflegt
 Kontakte mit ABC-Kategorie — „ohne euch".
@@ -281,17 +302,17 @@ Bewusst nicht geraten (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAG
 ---
 
 ## Nächste Steps (laut Fahrplan)
-1. **Session 8 — KI-Insights**: Edge Function analysiert Ziele vs. Ist und schreibt
-   Handlungsempfehlungen ins Master-Dashboard.
-2. **Session 9** — Benefits/Polish (Three.js-Showpiece, Feinschliff).
-3. **Audit-Phase** (vom Nutzer gewünscht): alle Sessions gemeinsam durchgehen und
+1. **Session 9** — Benefits/Polish (Three.js-Showpiece, Feinschliff, Ladezeiten).
+2. **Audit-Phase** (vom Nutzer gewünscht): alle Sessions gemeinsam durchgehen und
    manuell adjustieren — inkl. Infra-Deploys, die bewusst offen sind:
-   - `supabase db push` für Migrationen 0004/0005 (+ spätere)
+   - `supabase db push` für Migrationen 0004/0005/0006 (+ spätere)
    - Edge Functions deployen + Secrets setzen:
      - `onboarding-erinnerungen`: Resend/CRON_SECRET, Vorlagen füllen + aktivieren, Cron
      - `namensliste-interview`: `ANTHROPIC_API_KEY` (opt. `ANTHROPIC_MODELL`)
+     - `insights-generieren`: CRON_SECRET (opt. `ANTHROPIC_API_KEY`), Cron
    - echte Akademie-Inhalte einpflegen; offene Vertriebsfragen klären
-     (Karrieresystem, Termin-Typen, „Pflicht-Aufgaben je Rolle", Onboarding-Fristen)
+     (Karrieresystem, Termin-Typen, „Pflicht-Aufgaben je Rolle", Onboarding-Fristen,
+     Insights-Schwellenwerte)
    - GitHub-Push (Token + git-Name) — steht seit Session 3 aus
 
 ## Offen im Dashboard (bewusst später)

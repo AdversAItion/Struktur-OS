@@ -1,6 +1,6 @@
 # Datenbank-Schema
 
-Stand: Migrationen `0001` – `0005`.
+Stand: Migrationen `0001` – `0006`.
 **Nach jeder Migration diese Datei aktualisieren** (CLAUDE.md, Merge-Regel 2).
 
 Alle Schema-Änderungen laufen über SQL-Dateien in `supabase/migrations/` —
@@ -13,6 +13,7 @@ nie manuell im Supabase-Dashboard klicken.
 | `0003_akademie.sql` | `akademie_module`, `akademie_lektionen`, `akademie_tests`, `akademie_fortschritt` |
 | `0004_onboarding_erinnerungen.sql` | `onboarding_trigger.erinnerung_gesendet_am`, Tabelle `onboarding_vorlagen` (Edge-Function-Automatik) |
 | `0005_namensliste.sql` | Tabelle `kontakte` (Namensliste mit ABC-Kategorie) |
+| `0006_insights.sql` | Tabelle `insights` (KI-Handlungsempfehlungen fürs Master-Dashboard) |
 
 ---
 
@@ -350,6 +351,31 @@ RLS: eigene CRUD; Struktur (Rang ≥ 30) liest mit; master alles.
 
 ---
 
+## Tabelle: `insights` (0006)
+
+System-generierte Handlungsempfehlung zu einem Partner für einen Monat — die
+Edge Function `insights-generieren` schreibt sie, das Master-Dashboard zeigt sie.
+
+| Spalte | Typ | Notiz |
+|---|---|---|
+| `id` | `uuid` PK | |
+| `partner_id` | `uuid` NOT NULL | → `partner(id)`, cascade — Betroffener |
+| `monat` | `date` NOT NULL | Monatserster (CHECK) |
+| `typ` | `text` NOT NULL | `einheiten_null` \| `hinter_plan` \| `keine_termine` \| `onboarding_stockt` |
+| `prioritaet` | `text` NOT NULL | `hoch` \| `mittel` \| `niedrig` |
+| `fakt` | `text` NOT NULL | datenbasierte Beobachtung („0 Einheiten bei Ziel 400") |
+| `empfehlung` | `text` NOT NULL | Handlung („eingreifen …") |
+| `erledigt` | `boolean` NOT NULL | Default `false` |
+| `erstellt_am` | `timestamptz` NOT NULL | |
+
+UNIQUE `(partner_id, monat, typ)`. Partieller Index auf offene Insights.
+
+RLS: **kein** GP-Zugriff (Coaching-Werkzeug der Führung). Führungskraft liest/
+erledigt ihre Struktur; master alles. INSERT/DELETE nur per `service_role`
+(Edge Function) — bewusst keine Insert-Policy für normale Nutzer.
+
+---
+
 ## Getestet
 
 Migrationen `0001`–`0003` und `seed.sql` wurden gegen echtes Postgres 18
@@ -371,8 +397,12 @@ Migration `0005` separat gegen echtes Postgres geprüft (8 Tests): Tabelle
 `kontakte`, CHECKs (Kategorie, leerer Name), und die RLS (eigene CRUD, kein Anlegen
 für Fremde, Struktur/master liest mit, Fremd-GP gesperrt).
 
+Migration `0006` separat gegen echtes Postgres geprüft (10 Tests): Tabelle
+`insights`, CHECKs (Typ, Monatserster, Unique), und die RLS (master alle,
+Führungskraft nur Struktur, GP keine, Fremd-GP gesperrt, FK darf erledigen).
+
 **Noch nicht gegen echtes Supabase getestet.** Der Stub bildet `auth.uid()` nach,
-nicht die echte GoTrue-Auth. `0004`/`0005` sind zudem noch **nicht gepusht** (kommt
+nicht die echte GoTrue-Auth. `0004`–`0006` sind zudem noch **nicht gepusht** (kommt
 in der Audit-/Deploy-Phase). Nach `supabase db push` einmal live gegenprüfen.
 
 ---
