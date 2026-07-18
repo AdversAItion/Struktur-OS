@@ -26,20 +26,26 @@ export async function monatsUebersichtLaden(monat: string): Promise<PartnerUeber
   const partnerIds = partner.map((p) => p.id)
   const { von, bis } = monatsBereich(monat)
 
-  const [zielMap, istMap, akademie] = await Promise.all([
-    zieleEinheitenMap(partnerIds, monat),
+  const [zielMap, istMap, terminMap, akademie] = await Promise.all([
+    zieleMap(partnerIds, monat),
     einheitenSummeMap(partnerIds, von, bis),
+    termineSummeMap(partnerIds, von, bis),
     akademieFortschrittMap(partner),
   ])
 
   return partner
-    .map((p) => ({
-      partner: p,
-      zielEinheiten: zielMap.get(p.id) ?? null,
-      istEinheiten: istMap.get(p.id) ?? 0,
-      lektionenAbgeschlossen: akademie.abgeschlossen.get(p.id) ?? 0,
-      lektionenVerfuegbar: akademie.verfuegbar.get(p.id) ?? 0,
-    }))
+    .map((p) => {
+      const ziel = zielMap.get(p.id)
+      return {
+        partner: p,
+        zielEinheiten: ziel?.einheiten ?? null,
+        istEinheiten: istMap.get(p.id) ?? 0,
+        zielTermine: ziel?.termine ?? null,
+        istTermine: terminMap.get(p.id) ?? 0,
+        lektionenAbgeschlossen: akademie.abgeschlossen.get(p.id) ?? 0,
+        lektionenVerfuegbar: akademie.verfuegbar.get(p.id) ?? 0,
+      }
+    })
     .sort((a, b) => a.partner.name.localeCompare(b.partner.name, 'de'))
 }
 
@@ -118,18 +124,47 @@ export async function einheitLoeschen(id: string): Promise<void> {
 
 // --- Helfer ----------------------------------------------------------------
 
-async function zieleEinheitenMap(
+async function zieleMap(
   partnerIds: string[],
   monat: string,
-): Promise<Map<string, number>> {
+): Promise<Map<string, { einheiten: number; termine: number }>> {
   const { data, error } = await supabase
     .from('ziele')
-    .select('partner_id, ziel_einheiten')
+    .select('partner_id, ziel_einheiten, ziel_termine')
     .in('partner_id', partnerIds)
     .eq('monat', monatZuIso(monat))
   if (error) throw new Error(error.message)
+  const map = new Map<string, { einheiten: number; termine: number }>()
+  for (const z of data ?? []) {
+    map.set(z.partner_id as string, {
+      einheiten: Number(z.ziel_einheiten),
+      termine: Number(z.ziel_termine),
+    })
+  }
+  return map
+}
+
+/**
+ * Zahl der `termine`-Zeilen je Partner im Monat (alle Status — die Ist-Zahl
+ * zählt vereinbarte Termine, nicht nur wahrgenommene). Session 5.
+ */
+async function termineSummeMap(
+  partnerIds: string[],
+  von: string,
+  bis: string,
+): Promise<Map<string, number>> {
+  const { data, error } = await supabase
+    .from('termine')
+    .select('partner_id')
+    .in('partner_id', partnerIds)
+    .gte('datum', von)
+    .lt('datum', bis)
+  if (error) throw new Error(error.message)
   const map = new Map<string, number>()
-  for (const z of data ?? []) map.set(z.partner_id as string, Number(z.ziel_einheiten))
+  for (const t of data ?? []) {
+    const id = t.partner_id as string
+    map.set(id, (map.get(id) ?? 0) + 1)
+  }
   return map
 }
 

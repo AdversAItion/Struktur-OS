@@ -6,6 +6,49 @@ Stand: 2026-07-18
 
 ## Fertig
 
+### Modul `kalender` (Session 5)
+Eigener Kalender + To-dos — jeder Partner verwaltet seine Termine (Beratung,
+Nachfassen, Rekrutierung, Sonstiges) und offenen Aufgaben. Kein neues Schema:
+nutzt `termine`/`todos` (0002). Ersetzt den Platzhalter `src/seiten/Kalender.tsx`
+(gelöscht).
+
+- `types.ts` — Termin/Todo-Typen + exakte CHECK-Werte aus 0002 (`typ`, `status`,
+  `quelle`) mit deutschen Labels
+- `gruppierung.ts` — reine, testbare Sortier-/Gruppierlogik: kommende/vergangene
+  Termine (chronologisch), Gruppierung nach Kalendertag („Heute"/„Morgen"/
+  Wochentag), überfällige To-dos, offene/erledigte Sortierung
+- `format.ts` — deutsche Uhrzeit-/Datumsformatierung, `datetime-local` ⇄ ISO
+- `api.ts` — Termine/Todos laden, anlegen, Status/erledigt ändern, löschen;
+  arbeitet ausschliesslich mit dem eigenen Partner (Session-Scope, siehe „Offen")
+- `KalenderSeite` (`/kalender`, alle Rollen, kein `min_role`) — zwei Bereiche:
+  **Termine** (Liste, kommende zuerst, nach Tag gruppiert, Vergangene
+  eingeklappt, Status per Dropdown direkt in der Zeile, Anlegen/Löschen) und
+  **To-dos** (offen/erledigt getrennt, erledigt eingeklappt, überfällige
+  `faellig_am < heute` rot markiert, Anlegen/Abhaken/Löschen)
+- Rechte streng nach RLS (0002): jeder schreibt nur eigene Zeilen; das UI
+  spiegelt das (keine Fremdvergabe/Struktur-Sicht im UI), obwohl die RLS bei
+  `todos` INSERT für die Struktur und bei beiden Tabellen Lesen für die
+  Struktur schon erlaubt — bewusst zurückgestellt (siehe „Offen")
+- **Dashboard-Anbindung**: `dashboard/api.ts` zählt zusätzlich `termine` je
+  Partner im Monat (alle Status) und stellt sie `ziel_termine` gegenüber;
+  `DashboardSeite.tsx` zeigt das als dritte Kennzahl (Balken Ist/Soll) neben
+  Einheiten und Akademie. `PartnerUebersicht` um `zielTermine`/`istTermine`
+  erweitert.
+- **End-to-end getestet** (Playwright, statefuler Mock, `page.route()`-Muster
+  wie Session 4): Termin anlegen → in der Liste sichtbar (Typ + Uhrzeit) →
+  Status auf „Stattgefunden" ändern → löschen → Leerzustand kehrt zurück.
+  To-do mit `faellig_am` = gestern anlegen → als „überfällig" markiert →
+  abhaken → verschwindet aus offen, taucht unter „Erledigte anzeigen" auf →
+  löschen. Dashboard zeigt „2 / 3" für ein Teammitglied mit zwei Terminen im
+  Monat gegen ein Ziel von 3. 22/22 Prüfungen grün, keine JS-Fehler.
+- `npm run build` und `npm run lint` laufen fehlerfrei.
+
+**Bewusst nicht gebaut/geraten:** „Pflicht-Aufgaben je Rolle" (aus dem
+Fahrplan erwähnt) ist ungeklärte Vertriebslogik — welche To-dos/Termine sind
+je Rolle verpflichtend, wer legt sie fest, welche Fristen gelten? Nicht
+erfunden (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAGEN, nicht
+raten"), als offene Frage unten aufgeführt.
+
 ### Modul `dashboard` (Session 4)
 „Wer liefert, wer hängt" — Master + Führungskraft sehen pro Monat/Partner das Ist
 gegen Soll. Kein neues Schema: nutzt `ziele`/`einheiten` (0002) + Akademie-Fortschritt.
@@ -119,7 +162,8 @@ Supabase gelaufen** — das ist Punkt 1 der manuellen Checkliste unten.
 - `src/components/AppShell.tsx` — Seitennavigation ab `md`, Bottom-Bar auf dem Handy
 - Nav-Punkte blenden sich nach Rolle aus (Dashboard erst ab `fuehrungskraft`)
 - Rollen-Redirect auf `/`: master/fuehrungskraft → `/dashboard`, GPs → `/akademie`
-- Platzhalter-Seiten unter `src/seiten/`: Dashboard, Akademie, Kalender, Namensliste
+- Platzhalter-Seiten unter `src/seiten/`: Dashboard, Akademie, Namensliste
+  (Kalender ist seit Session 5 ein echtes Modul, kein Platzhalter mehr)
 
 ---
 
@@ -140,6 +184,11 @@ Bewusst nicht geraten (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAG
 5. **Nav-Sichtbarkeit** — ist die Namensliste wirklich für `gp_frisch` offen?
    Aktuell ja.
 6. **Namensliste** — Fachlogik und Tabellen noch komplett offen.
+7. **Pflicht-Aufgaben je Rolle** (Session 5) — der Fahrplan erwähnt „Pflicht-
+   Aufgaben je Rolle" für Kalender/To-dos. Unklar: welche To-dos/Termine sind
+   für welche Rolle verpflichtend, wer legt sie fest (Master? automatisch?),
+   welche Fristen gelten? Nicht gebaut/geraten — `kalender`-Modul deckt aktuell
+   nur freie, selbst verwaltete Termine/To-dos ab.
 
 ---
 
@@ -187,15 +236,18 @@ Bewusst nicht geraten (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAG
 ---
 
 ## Nächste Steps (laut Fahrplan)
-1. **Session 5 — Kalender & To-dos**: `termine` + `todos` stehen aus Migration
-   `0002`; das Dashboard kann dann das Termine-Ist anbinden.
-2. **Echte Akademie-Inhalte einpflegen** — Player (S2) + Verwaltung (S3) stehen;
+1. **Echte Akademie-Inhalte einpflegen** — Player (S2) + Verwaltung (S3) stehen;
    der Master kann jetzt über die UI reale Module/Lektionen/Tests anlegen
    (braucht Modul-Zuschnitt vom Vertrieb).
-3. Antworten auf die offenen Vertriebsfragen oben (blockiert v. a. Karrieresystem
-   und Termin-Typen).
+2. **Namensliste** — nächstes größeres Modul, Fachlogik/Tabellen noch komplett
+   offen (braucht eigene Migration + Input vom Vertrieb).
+3. Antworten auf die offenen Vertriebsfragen oben (blockiert v. a. Karrieresystem,
+   Termin-Typen und „Pflicht-Aufgaben je Rolle").
+4. Struktur-Sicht im `kalender`-Modul (Führungskraft sieht/vergibt Termine/To-dos
+   der Downline) — RLS erlaubt es bereits, UI fehlt noch (siehe kalender/README).
 
 ## Offen im Dashboard (bewusst später)
-- Termine-Ist (Zahl der Termine im Monat) — kommt mit Session 5.
 - Struktur-Aggregation über eine ganze Downline (Summe pro Teilbaum) — aktuell
   ist die Übersicht pro Partner.
+- Termine-Ist steht nur auf der Übersicht (`DashboardSeite.tsx`), noch nicht in
+  `PartnerDetail.tsx`.

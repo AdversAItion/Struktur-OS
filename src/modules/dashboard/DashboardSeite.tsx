@@ -90,12 +90,21 @@ export function DashboardSeite() {
 }
 
 function PartnerZeile({ zeile, monat }: { zeile: PartnerUebersicht; monat: string }) {
-  const { partner, zielEinheiten, istEinheiten, lektionenAbgeschlossen, lektionenVerfuegbar } =
-    zeile
+  const {
+    partner,
+    zielEinheiten,
+    istEinheiten,
+    zielTermine,
+    istTermine,
+    lektionenAbgeschlossen,
+    lektionenVerfuegbar,
+  } = zeile
 
   const hatZiel = zielEinheiten !== null && zielEinheiten > 0
   const einheitenAnteil = hatZiel ? Math.min(istEinheiten / zielEinheiten!, 1) : 0
   const haengt = hatZiel && istEinheiten === 0
+  const hatZielTermine = zielTermine !== null && zielTermine > 0
+  const termineAnteil = hatZielTermine ? Math.min(istTermine / zielTermine!, 1) : 0
   const akademieAnteil =
     lektionenVerfuegbar > 0 ? lektionenAbgeschlossen / lektionenVerfuegbar : 0
 
@@ -118,7 +127,7 @@ function PartnerZeile({ zeile, monat }: { zeile: PartnerUebersicht; monat: strin
         )}
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-4">
+      <div className="mt-3 grid grid-cols-3 gap-3">
         <Kennzahl
           label="Einheiten"
           anteil={einheitenAnteil}
@@ -128,6 +137,12 @@ function PartnerZeile({ zeile, monat }: { zeile: PartnerUebersicht; monat: strin
               : dezimal(istEinheiten)
           }
           zusatz={hatZiel ? undefined : 'kein Ziel'}
+        />
+        <Kennzahl
+          label="Termine"
+          anteil={termineAnteil}
+          wert={hatZielTermine ? `${istTermine} / ${zielTermine}` : String(istTermine)}
+          zusatz={hatZielTermine ? undefined : 'kein Ziel'}
         />
         <Kennzahl
           label="Akademie"

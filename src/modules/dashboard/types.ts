@@ -33,12 +33,16 @@ export interface ZielEingabe {
 /**
  * Eine Zeile der Monatsübersicht: ein Partner mit seinen echten Ist-Zahlen
  * gegen sein Soll. Neuanmeldungen haben (noch) keine Ist-Quelle und tauchen
- * hier bewusst nicht als Ist auf — nur Einheiten und Akademie sind gemessen.
+ * hier bewusst nicht als Ist auf — nur Einheiten, Termine und Akademie sind
+ * gemessen.
  */
 export interface PartnerUebersicht {
   partner: Partner
   zielEinheiten: number | null
   istEinheiten: number
+  /** Anzahl `termine`-Zeilen im Monat (alle Status) — Session 5. */
+  zielTermine: number | null
+  istTermine: number
   lektionenAbgeschlossen: number
   lektionenVerfuegbar: number
 }
