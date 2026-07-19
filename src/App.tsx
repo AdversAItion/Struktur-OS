@@ -1,4 +1,4 @@
-import { lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/modules/auth/AuthProvider'
 import { Geschuetzt } from '@/modules/auth/Geschuetzt'
@@ -39,6 +39,10 @@ const KalenderSeite = lazy(() =>
 const NamenslisteSeite = lazy(() =>
   import('@/modules/namensliste/NamenslisteSeite').then((m) => ({ default: m.NamenslisteSeite })),
 )
+// Öffentliche Rekrutierungs-Seite mit Three.js — eigener Chunk, nicht im Haupt-Bundle.
+const BenefitsSeite = lazy(() =>
+  import('@/modules/benefits/BenefitsSeite').then((m) => ({ default: m.BenefitsSeite })),
+)
 
 /**
  * Alles liegt hinter <Geschuetzt> — ohne Anmeldung erscheint die LoginSeite.
@@ -49,6 +53,15 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Öffentlich: Rekrutierungs-Showpiece, ohne Login/Nav. */}
+          <Route
+            path="/benefits"
+            element={
+              <Suspense fallback={<div className="min-h-svh bg-bg" />}>
+                <BenefitsSeite />
+              </Suspense>
+            }
+          />
           <Route
             element={
               <Geschuetzt>

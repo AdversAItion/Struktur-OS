@@ -6,6 +6,31 @@ Stand: 2026-07-18
 
 ## Fertig
 
+### Benefits-Showpiece + Polish (Session 9)
+Öffentliche Rekrutierungs-Seite mit 3D-Hero (Three.js) — das „Warum mit uns?"-
+Showpiece für Interessenten ohne Account.
+
+- **Modul `src/modules/benefits/`**: `BenefitsSeite` (Hero + Benefit-Karten + CTA),
+  `Szene` (react-three-fiber: gold-schwarzes rotierendes Icosaeder-Netzwerk als
+  Struktur-Metapher, unlit + `dpr` gekappt für Mobile, respektiert
+  `prefers-reduced-motion`), `HeroFallback` (statischer Ersatz + ErrorBoundary
+  für fehlendes WebGL).
+- **Öffentliche Route** `/benefits` außerhalb von `<Geschuetzt>`, ohne Nav.
+- **Ladezeit-Feinschliff**: Three.js liegt in einem eigenen Chunk (~235 KB gzip),
+  der NUR auf `/benefits` lädt — das Haupt-Bundle der App (130 KB gzip) bleibt
+  unverändert.
+- **Verifiziert**: Build/Lint grün; Playwright — Seite öffentlich erreichbar
+  (kein Login), 3D-Canvas rendert (WebGL via swiftshader), alle Inhalte da, keine
+  JS-Fehler. Screenshot bestätigt das Showpiece.
+- **Bewusst ENTWURF**: Marketing-Texte sind als Entwurf markiert (keine erfundenen
+  Zahlen/Testimonials/Verknappung), Kontaktweg als `[OFFEN]` — final im Audit.
+
+**Polish/Stand:** `npm run build` und `npm run lint` durchgängig grün. Alle
+Feature-Chunks lazy-geladen (Akademie/Markdown, Dashboard, Kalender, Namensliste,
+Benefits/Three.js) — Haupt-Bundle schlank. Keine offenen Bugs aus den Testläufen
+(jede Session E2E-verifiziert). Bekannte Warnung: der Three.js-Chunk > 500 KB
+(erwartet, isoliert auf `/benefits`).
+
 ### KI-Insights fürs Master-Dashboard (Session 8)
 Eine Edge Function analysiert Ziel vs. Ist pro Partner und schreibt priorisierte
 Handlungsempfehlungen ins Dashboard („Danny: 0 Einheiten bei Ziel 400 → eingreifen").
@@ -301,10 +326,13 @@ Bewusst nicht geraten (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAG
 
 ---
 
-## Nächste Steps (laut Fahrplan)
-1. **Session 9** — Benefits/Polish (Three.js-Showpiece, Feinschliff, Ladezeiten).
-2. **Audit-Phase** (vom Nutzer gewünscht): alle Sessions gemeinsam durchgehen und
-   manuell adjustieren — inkl. Infra-Deploys, die bewusst offen sind:
+## Alle Sessions (0–9) gebaut ✅
+
+Der komplette Fahrplan ist umgesetzt. Als Nächstes die **Audit-Phase**.
+
+## Nächste Steps — Audit-Phase (vom Nutzer gewünscht)
+Alle Sessions gemeinsam durchgehen und manuell adjustieren — inkl. Infra-Deploys,
+die bewusst offen gehalten sind:
    - `supabase db push` für Migrationen 0004/0005/0006 (+ spätere)
    - Edge Functions deployen + Secrets setzen:
      - `onboarding-erinnerungen`: Resend/CRON_SECRET, Vorlagen füllen + aktivieren, Cron
@@ -313,6 +341,7 @@ Bewusst nicht geraten (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAG
    - echte Akademie-Inhalte einpflegen; offene Vertriebsfragen klären
      (Karrieresystem, Termin-Typen, „Pflicht-Aufgaben je Rolle", Onboarding-Fristen,
      Insights-Schwellenwerte)
+   - Benefits-Seite: echte Texte + Kontaktweg; ggf. `noindex`-Ausnahme wenn indexierbar
    - GitHub-Push (Token + git-Name) — steht seit Session 3 aus
 
 ## Offen im Dashboard (bewusst später)
