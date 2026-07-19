@@ -38,6 +38,11 @@ function dez(n: number): string {
   return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(n)
 }
 
+// Schwellenwerte — bewusst „lockerer" (Entscheidung Audit): erst ab Monatsmitte
+// und nur bei deutlichem Rückstand flaggen. Zentral, damit leicht justierbar.
+export const MONATS_SCHWELLE = 0.5 // erst ab Monatshälfte auf 0-Werte reagieren
+export const PLAN_RUECKSTAND = 0.35 // „hinter Plan" erst bei >35 % Abstand zum Monatsanteil
+
 /**
  * Bildet die Signale für einen Partner. Gibt nur auffällige Punkte zurück
  * (leeres Array = alles im grünen Bereich). `anteil` ist der Monatsfortschritt;
@@ -48,7 +53,7 @@ export function signaleBilden(k: PartnerKennzahlen, anteil: number): Signal[] {
   const hatEinheitenZiel = k.zielEinheiten !== null && k.zielEinheiten > 0
 
   // 1. Nichts geliefert bei gesetztem Ziel, Monat schon ein Stück weit -> eingreifen.
-  if (hatEinheitenZiel && k.istEinheiten === 0 && anteil > 0.3) {
+  if (hatEinheitenZiel && k.istEinheiten === 0 && anteil > MONATS_SCHWELLE) {
     signale.push({
       partner_id: k.partner_id,
       typ: 'einheiten_null',
@@ -60,7 +65,7 @@ export function signaleBilden(k: PartnerKennzahlen, anteil: number): Signal[] {
     // 2. Deutlich hinter Plan (Ist-Anteil liegt spürbar unter dem Monatsanteil).
     hatEinheitenZiel &&
     k.istEinheiten > 0 &&
-    k.istEinheiten / k.zielEinheiten! < anteil - 0.2
+    k.istEinheiten / k.zielEinheiten! < anteil - PLAN_RUECKSTAND
   ) {
     const prozent = Math.round((k.istEinheiten / k.zielEinheiten!) * 100)
     signale.push({
@@ -73,7 +78,7 @@ export function signaleBilden(k: PartnerKennzahlen, anteil: number): Signal[] {
   }
 
   // 3. Termin-Ziel gesetzt, aber noch kein einziger Termin.
-  if (k.zielTermine !== null && k.zielTermine > 0 && k.istTermine === 0 && anteil > 0.3) {
+  if (k.zielTermine !== null && k.zielTermine > 0 && k.istTermine === 0 && anteil > MONATS_SCHWELLE) {
     signale.push({
       partner_id: k.partner_id,
       typ: 'keine_termine',

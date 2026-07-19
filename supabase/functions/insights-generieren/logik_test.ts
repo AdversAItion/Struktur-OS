@@ -17,7 +17,7 @@ function basis(over: Partial<PartnerKennzahlen> = {}): PartnerKennzahlen {
 }
 
 Deno.test('einheiten_null: 0 bei Ziel -> hoch, mit korrektem Fakt', () => {
-  const s = signaleBilden(basis({ istEinheiten: 0, zielEinheiten: 400 }), 0.5)
+  const s = signaleBilden(basis({ istEinheiten: 0, zielEinheiten: 400 }), 0.6)
   const e = s.find((x) => x.typ === 'einheiten_null')
   assert(e)
   assertEquals(e!.prioritaet, 'hoch')
@@ -51,7 +51,7 @@ Deno.test('einheiten_null und hinter_plan schliessen sich aus', () => {
 })
 
 Deno.test('keine_termine: Ziel gesetzt, 0 Termine -> mittel', () => {
-  const s = signaleBilden(basis({ zielTermine: 20, istTermine: 0 }), 0.5)
+  const s = signaleBilden(basis({ zielTermine: 20, istTermine: 0 }), 0.6)
   assert(s.some((x) => x.typ === 'keine_termine' && x.prioritaet === 'mittel'))
 })
 
