@@ -99,9 +99,9 @@ join public.partner p on p.user_id = e.user_id;
 insert into public.termine (partner_id, datum, typ, status)
 select p.id, now() + (t.tage || ' days')::interval, t.typ, t.status
 from (values
-  ('33333333-3333-3333-3333-333333333333'::uuid, 2, 'beratung', 'geplant'),
-  ('44444444-4444-4444-4444-444444444444'::uuid, 1, 'rekrutierung', 'geplant'),
-  ('44444444-4444-4444-4444-444444444444'::uuid, -5, 'beratung', 'stattgefunden')
+  ('33333333-3333-3333-3333-333333333333'::uuid, 2, 'vg', 'geplant'),
+  ('44444444-4444-4444-4444-444444444444'::uuid, 1, 'rec', 'geplant'),
+  ('44444444-4444-4444-4444-444444444444'::uuid, -5, 'vg', 'stattgefunden')
 ) as t(user_id, tage, typ, status)
 join public.partner p on p.user_id = t.user_id;
 

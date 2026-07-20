@@ -1,6 +1,6 @@
 # Datenbank-Schema
 
-Stand: Migrationen `0001` – `0006`.
+Stand: Migrationen `0001` – `0007`.
 **Nach jeder Migration diese Datei aktualisieren** (CLAUDE.md, Merge-Regel 2).
 
 Alle Schema-Änderungen laufen über SQL-Dateien in `supabase/migrations/` —
@@ -14,6 +14,7 @@ nie manuell im Supabase-Dashboard klicken.
 | `0004_onboarding_erinnerungen.sql` | `onboarding_trigger.erinnerung_gesendet_am`, Tabelle `onboarding_vorlagen` (Edge-Function-Automatik) |
 | `0005_namensliste.sql` | Tabelle `kontakte` (Namensliste mit ABC-Kategorie) |
 | `0006_insights.sql` | Tabelle `insights` (KI-Handlungsempfehlungen fürs Master-Dashboard) |
+| `0007_termin_typen.sql` | `termine.typ` auf die echten Gesprächsarten (rec/vg/ttv/tv/zvg/…) |
 
 ---
 
@@ -175,7 +176,7 @@ Vorgabe ausschliesslich der Master ein.
 | `id` | `uuid` PK | |
 | `partner_id` | `uuid` NOT NULL | → `partner(id)`, cascade |
 | `datum` | `timestamptz` NOT NULL | |
-| `typ` | `text` NOT NULL | `beratung` \| `nachfassen` \| `rekrutierung` \| `sonstiges` |
+| `typ` | `text` NOT NULL | (0007) `rec` \| `vg` \| `ttv` \| `tv` \| `zvg` \| `einarbeitung` \| `meeting` \| `grundkurs` — Labels im Frontend |
 | `status` | `text` NOT NULL | Default `geplant`; `geplant` \| `stattgefunden` \| `abgesagt` \| `verschoben` |
 | `created_at` | `timestamptz` NOT NULL | |
 

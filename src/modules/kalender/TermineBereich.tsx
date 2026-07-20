@@ -137,7 +137,7 @@ function TerminFormular({
   onAngelegt: () => Promise<void>
 }) {
   const [datum, setDatum] = useState(jetztAlsLocal())
-  const [typ, setTyp] = useState<TerminTyp>('beratung')
+  const [typ, setTyp] = useState<TerminTyp>('vg')
   const [speichert, setSpeichert] = useState(false)
   const [fehler, setFehler] = useState<string | null>(null)
 

@@ -1,9 +1,26 @@
-export type TerminTyp = 'beratung' | 'nachfassen' | 'rekrutierung' | 'sonstiges'
+export type TerminTyp =
+  | 'rec'
+  | 'vg'
+  | 'ttv'
+  | 'tv'
+  | 'zvg'
+  | 'einarbeitung'
+  | 'meeting'
+  | 'grundkurs'
 export type TerminStatus = 'geplant' | 'stattgefunden' | 'abgesagt' | 'verschoben'
 export type TodoQuelle = 'selbst' | 'vorgesetzter' | 'system'
 
-/** Werte exakt aus dem CHECK-Constraint der `termine`-Tabelle (0002). */
-export const TERMIN_TYPEN: TerminTyp[] = ['beratung', 'nachfassen', 'rekrutierung', 'sonstiges']
+/** Werte exakt aus dem CHECK-Constraint der `termine`-Tabelle (0007). */
+export const TERMIN_TYPEN: TerminTyp[] = [
+  'rec',
+  'vg',
+  'ttv',
+  'tv',
+  'zvg',
+  'einarbeitung',
+  'meeting',
+  'grundkurs',
+]
 export const TERMIN_STATUS_WERTE: TerminStatus[] = [
   'geplant',
   'stattgefunden',
@@ -11,11 +28,16 @@ export const TERMIN_STATUS_WERTE: TerminStatus[] = [
   'verschoben',
 ]
 
+// Klartext-Labels — hier ohne Migration anpassbar. Abkürzung + Langform.
 export const TERMIN_TYP_LABEL: Record<TerminTyp, string> = {
-  beratung: 'Beratung',
-  nachfassen: 'Nachfassen',
-  rekrutierung: 'Rekrutierung',
-  sonstiges: 'Sonstiges',
+  rec: 'REC — Rekrutierungsgespräch',
+  vg: 'VG — Verkaufsgespräch',
+  ttv: 'TTV — Telefonische Terminvereinbarung',
+  tv: 'TV — Termin',
+  zvg: 'ZVG — Zielvereinbarungsgespräch',
+  einarbeitung: 'Einarbeitung',
+  meeting: 'Meeting',
+  grundkurs: 'Grundkurs',
 }
 
 export const TERMIN_STATUS_LABEL: Record<TerminStatus, string> = {
