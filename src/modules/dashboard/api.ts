@@ -71,6 +71,15 @@ export async function insightErledigen(id: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
+/** Setzt das Wochenziel Termine eines Partners (nur master, RLS 0008). */
+export async function wochenzielSetzen(partnerId: string, wert: number): Promise<void> {
+  const { error } = await supabase
+    .from('partner')
+    .update({ wochenziel_termine: wert })
+    .eq('id', partnerId)
+  if (error) throw new Error(error.message)
+}
+
 export async function partnerLaden(id: string): Promise<Partner | null> {
   const { data, error } = await supabase.from('partner').select('*').eq('id', id).maybeSingle()
   if (error) throw new Error(error.message)

@@ -1,6 +1,6 @@
 # Datenbank-Schema
 
-Stand: Migrationen `0001` – `0007`.
+Stand: Migrationen `0001` – `0008`.
 **Nach jeder Migration diese Datei aktualisieren** (CLAUDE.md, Merge-Regel 2).
 
 Alle Schema-Änderungen laufen über SQL-Dateien in `supabase/migrations/` —
@@ -15,6 +15,7 @@ nie manuell im Supabase-Dashboard klicken.
 | `0005_namensliste.sql` | Tabelle `kontakte` (Namensliste mit ABC-Kategorie) |
 | `0006_insights.sql` | Tabelle `insights` (KI-Handlungsempfehlungen fürs Master-Dashboard) |
 | `0007_termin_typen.sql` | `termine.typ` auf die echten Gesprächsarten (rec/vg/ttv/tv/zvg/…) |
+| `0008_wochenziel_termine.sql` | `partner.wochenziel_termine` (Default 5) + RLS-Sperre (nur master setzt) |
 
 ---
 
@@ -87,6 +88,7 @@ Ein Mensch im Vertrieb, 1:1 an einen `auth.users`-Account gekoppelt.
 | `upline_id` | `uuid` NULL | → `partner(id)`, `on delete set null`. Selbstreferenz. |
 | `aktiv` | `boolean` NOT NULL | Default `true` |
 | `aktiv_seit` | `date` NOT NULL | Default `current_date`. Start im Vertrieb — fachlich, bewusst getrennt von `created_at` (Anlegen des Accounts). |
+| `wochenziel_termine` | `smallint` NOT NULL | (0008) Default `5`. Wochenziel Termine, setzt nur der master (RLS-Sperre). |
 | `created_at` | `timestamptz` NOT NULL | Default `now()` |
 
 Indizes: `partner_user_id_idx`, `partner_upline_id_idx`.
@@ -103,7 +105,7 @@ Startrolle ist **immer** `gp_frisch` — Hochstufen macht ausschliesslich ein `m
 | `partner_select_eigene` | SELECT | `user_id = auth.uid()` |
 | `partner_select_struktur` | SELECT | Rang ≥ 30 **und** Ziel liegt in der eigenen Downline |
 | `partner_select_master` | SELECT | Rang ≥ 40 (master sieht alle) |
-| `partner_update_eigene` | UPDATE | Eigene Zeile; `rolle`, `stufe`, `upline_id` unveränderbar |
+| `partner_update_eigene` | UPDATE | Eigene Zeile; `rolle`, `stufe`, `upline_id`, `wochenziel_termine` unveränderbar (0008) |
 | `partner_update_master` | UPDATE | Rang ≥ 40 darf alles |
 
 Kein INSERT/DELETE per Policy: INSERT läuft nur über den Trigger, DELETE nur über

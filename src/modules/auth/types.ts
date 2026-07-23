@@ -47,6 +47,8 @@ export interface Partner {
   aktiv: boolean
   /** Start im Vertrieb (Datum), nicht das Anlegen des Accounts. */
   aktiv_seit: string
+  /** Wochenziel Termine (Default 5). Setzt nur der master (RLS 0008). */
+  wochenziel_termine: number
   created_at: string
 }
 

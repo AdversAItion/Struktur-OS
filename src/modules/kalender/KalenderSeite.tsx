@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@/modules/auth/kontext'
 import { termineLaden, todosLaden } from './api'
+import { termineDieseWoche } from './gruppierung'
 import { TermineBereich } from './TermineBereich'
 import { TodoBereich } from './TodoBereich'
 import type { Termin, Todo } from './types'
@@ -54,10 +55,38 @@ export function KalenderSeite() {
         <p className="num mt-4 text-sm text-muted">Lädt ...</p>
       ) : (
         <div className="mt-5 flex flex-col gap-2">
+          <WochenFortschritt
+            ist={termineDieseWoche(termine)}
+            ziel={partner.wochenziel_termine}
+          />
           <TermineBereich partnerId={partner.id} termine={termine} onGeaendert={laden} />
           <TodoBereich partnerId={partner.id} todos={todos} onGeaendert={laden} />
         </div>
       )}
+    </div>
+  )
+}
+
+/** Wochenziel-Fortschritt: Termine dieser Woche gegen das vom Master gesetzte Ziel. */
+function WochenFortschritt({ ist, ziel }: { ist: number; ziel: number }) {
+  if (ziel <= 0) return null
+  const anteil = Math.min(ist / ziel, 1)
+  const erreicht = ist >= ziel
+  return (
+    <div className="rounded-xl border border-line bg-panel p-4">
+      <div className="flex items-baseline justify-between">
+        <span className="num text-xs tracking-widest text-gold uppercase">Diese Woche</span>
+        <span className="num text-sm font-bold text-text">
+          {ist} / {ziel} Termine
+        </span>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-bg">
+        <div
+          className={`h-full rounded-full transition-[width] ${erreicht ? 'bg-gold' : 'bg-gold/70'}`}
+          style={{ width: `${Math.round(anteil * 100)}%` }}
+        />
+      </div>
+      {erreicht && <p className="num mt-1.5 text-xs text-gold">Wochenziel erreicht 🎯</p>}
     </div>
   )
 }

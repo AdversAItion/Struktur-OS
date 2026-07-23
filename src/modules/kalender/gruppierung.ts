@@ -20,6 +20,24 @@ export function sortiereTermine(termine: Termin[]): Termin[] {
   return [...termine].sort((a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime())
 }
 
+/** Beginn der Kalenderwoche (Montag 00:00) zu einem Datum. */
+export function wochenStart(jetzt: Date = new Date()): Date {
+  const d = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate())
+  const wochentag = (d.getDay() + 6) % 7 // Mo=0 … So=6
+  d.setDate(d.getDate() - wochentag)
+  return d
+}
+
+/** Zahl der Termine in der laufenden Kalenderwoche (Mo–So) — fürs Wochenziel. */
+export function termineDieseWoche(termine: Termin[], jetzt: Date = new Date()): number {
+  const start = wochenStart(jetzt).getTime()
+  const ende = start + 7 * 24 * 60 * 60 * 1000
+  return termine.filter((t) => {
+    const ts = new Date(t.datum).getTime()
+    return ts >= start && ts < ende
+  }).length
+}
+
 /** Nur Termine ab `jetzt`, aufsteigend sortiert — „kommende zuerst". */
 export function kommendeTermine(termine: Termin[], jetzt: Date = new Date()): Termin[] {
   return sortiereTermine(termine.filter((t) => new Date(t.datum).getTime() >= jetzt.getTime()))

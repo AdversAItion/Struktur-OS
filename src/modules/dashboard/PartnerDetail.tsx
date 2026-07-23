@@ -7,6 +7,7 @@ import {
   einheitenLaden,
   einheitLoeschen,
   partnerLaden,
+  wochenzielSetzen,
   zielLaden,
   zielSpeichern,
 } from './api'
@@ -108,6 +109,8 @@ export function PartnerDetail() {
       ) : (
         <ZielAnzeige ziel={ziel} />
       )}
+
+      <WochenzielControl partner={partner} istMaster={istMaster} onGespeichert={laden} />
 
       <div className="mt-8">
         <p className="num text-xs tracking-widest text-gold uppercase">Erfasste Einheiten</p>
@@ -272,6 +275,81 @@ function Zielwert({ label, wert }: { label: string; wert: string }) {
     <div>
       <p className="num text-lg font-bold text-text">{wert}</p>
       <p className="num text-[10px] tracking-wider text-muted uppercase">{label}</p>
+    </div>
+  )
+}
+
+/**
+ * Wochenziel Termine (Session Audit). Master setzt es pro GP; Nicht-Master
+ * sehen es nur. Referenzwert ist 5 — individuell anpassbar.
+ */
+function WochenzielControl({
+  partner,
+  istMaster,
+  onGespeichert,
+}: {
+  partner: Partner
+  istMaster: boolean
+  onGespeichert: () => Promise<void>
+}) {
+  const [wert, setWert] = useState(String(partner.wochenziel_termine))
+  const [speichert, setSpeichert] = useState(false)
+  const [gespeichert, setGespeichert] = useState(false)
+  const [fehler, setFehler] = useState<string | null>(null)
+
+  async function speichern() {
+    const n = Math.round(zahl(wert))
+    if (Number.isNaN(n) || n < 0) {
+      setFehler('Bitte eine Zahl ≥ 0.')
+      return
+    }
+    setSpeichert(true)
+    setFehler(null)
+    setGespeichert(false)
+    try {
+      await wochenzielSetzen(partner.id, n)
+      await onGespeichert()
+      setGespeichert(true)
+    } catch (e) {
+      setFehler(e instanceof Error ? e.message : 'Speichern fehlgeschlagen.')
+    } finally {
+      setSpeichert(false)
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-line bg-panel p-5">
+      <p className="num text-xs tracking-widest text-muted uppercase">Wochenziel Termine</p>
+      {istMaster ? (
+        <div className="mt-2 flex items-center gap-3">
+          <input
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            value={wert}
+            onChange={(e) => setWert(e.target.value)}
+            aria-label="Wochenziel Termine"
+            className="w-24 rounded-lg border border-line bg-bg px-3 py-2.5 text-text focus:border-gold focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => void speichern()}
+            disabled={speichert}
+            className="rounded-lg bg-gold px-4 py-2.5 font-display text-sm font-bold text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {speichert ? 'Speichert ...' : 'Setzen'}
+          </button>
+          {gespeichert && <span className="num text-xs text-gold">Gespeichert.</span>}
+        </div>
+      ) : (
+        <p className="num mt-1 text-2xl font-bold text-text">{partner.wochenziel_termine}</p>
+      )}
+      {fehler && (
+        <p role="alert" className="mt-2 text-sm text-red-400">
+          {fehler}
+        </p>
+      )}
     </div>
   )
 }
