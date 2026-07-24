@@ -1,6 +1,6 @@
 # Datenbank-Schema
 
-Stand: Migrationen `0001` – `0009`.
+Stand: Migrationen `0001` – `0010`.
 **Nach jeder Migration diese Datei aktualisieren** (CLAUDE.md, Merge-Regel 2).
 
 Alle Schema-Änderungen laufen über SQL-Dateien in `supabase/migrations/` —
@@ -17,6 +17,7 @@ nie manuell im Supabase-Dashboard klicken.
 | `0007_termin_typen.sql` | `termine.typ` auf die echten Gesprächsarten (rec/vg/ttv/tv/zvg/…) |
 | `0008_wochenziel_termine.sql` | `partner.wochenziel_termine` (Default 5) + RLS-Sperre (nur master setzt) |
 | `0009_akademie_stufe.sql` | `akademie_module.min_stufe` + Stufen-Gating in den SELECT-Policies |
+| `0010_struktur_admin_stufe3.sql` | Struktur-Admin ab Stufe 3: `partner`-SELECT/UPDATE der eigenen Downline + Helfer `partner_alt()` |
 
 ---
 
@@ -105,8 +106,10 @@ Startrolle ist **immer** `gp_frisch` — Hochstufen macht ausschliesslich ein `m
 |---|---|---|
 | `partner_select_eigene` | SELECT | `user_id = auth.uid()` |
 | `partner_select_struktur` | SELECT | Rang ≥ 30 **und** Ziel liegt in der eigenen Downline |
+| `partner_select_struktur_stufe3` | SELECT | (0010) Stufe ≥ 3 **und** Ziel liegt in der eigenen Downline |
 | `partner_select_master` | SELECT | Rang ≥ 40 (master sieht alle) |
 | `partner_update_eigene` | UPDATE | Eigene Zeile; `rolle`, `stufe`, `upline_id`, `wochenziel_termine` unveränderbar (0008) |
+| `partner_update_struktur_admin` | UPDATE | (0010) Stufe ≥ 3 in eigener Downline; **nur** `stufe` (≤ eigene Stufe) und `aktiv` änderbar, Rest gegen `partner_alt(id)` gepinnt |
 | `partner_update_master` | UPDATE | Rang ≥ 40 darf alles |
 
 Kein INSERT/DELETE per Policy: INSERT läuft nur über den Trigger, DELETE nur über
@@ -119,9 +122,12 @@ die Kaskade von `auth.users`.
 Grund: Eine Policy auf `partner`, die selbst `partner` abfragt, löst sonst rekursiv
 wieder die RLS aus (Endlosschleife). `SECURITY DEFINER` umgeht das.
 
-`meine_stufe()` und `meine_upline_id()` gibt es aus einem zweiten Grund: In einer
-UPDATE-Policy sieht `with check` nur die **neue** Zeile. Um „Wert darf sich nicht
-ändern" zu prüfen, holen diese Funktionen den Altwert aus der DB.
+`meine_stufe()`, `meine_upline_id()` und `partner_alt(ziel)` (0010) gibt es aus
+einem zweiten Grund: In einer UPDATE-Policy sieht `with check` nur die **neue**
+Zeile. Um „Wert darf sich nicht ändern" zu prüfen, holen diese Funktionen den
+Altwert aus der DB. `partner_alt()` liefert die komplette Alt-Zeile eines
+beliebigen Zielpartners — so pinnt `partner_update_struktur_admin` alle Felder
+außer `stufe`/`aktiv`.
 
 ### `ist_in_meiner_struktur(ziel_partner_id)`
 Rekursiver CTE, der von `ziel_partner_id` über `upline_id` nach oben läuft.

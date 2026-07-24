@@ -1,7 +1,7 @@
 import { Suspense, type ReactNode } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '@/modules/auth/kontext'
-import { ROLLEN_LABEL, type Rolle } from '@/modules/auth/types'
+import { ROLLEN_LABEL, type Karrierestufe, type Rolle } from '@/modules/auth/types'
 
 /**
  * Layout der App: Seitennavigation ab `md`, Bottom-Bar auf dem Handy
@@ -15,6 +15,8 @@ interface NavPunkt {
   pfad: string
   label: string
   min_role: Rolle
+  /** Zusätzliche Mindest-Karrierestufe (z. B. Struktur-Verwaltung ab Stufe 3). */
+  min_stufe?: Karrierestufe
   icon: ReactNode
 }
 
@@ -66,13 +68,29 @@ const NAV: NavPunkt[] = [
       </>
     ),
   },
+  {
+    pfad: '/struktur',
+    label: 'Struktur',
+    min_role: 'gp_frisch',
+    min_stufe: 3,
+    icon: (
+      <>
+        <circle cx="12" cy="5" r="2" />
+        <circle cx="6" cy="19" r="2" />
+        <circle cx="18" cy="19" r="2" />
+        <path d="M12 7v4M12 11H6v6M12 11h6v6" />
+      </>
+    ),
+  },
 ]
 
 export function AppShell() {
-  const { partner, darf, abmelden } = useAuth()
+  const { partner, darf, darfStufe, abmelden } = useAuth()
   if (!partner) return null
 
-  const sichtbar = NAV.filter((p) => darf(p.min_role))
+  const sichtbar = NAV.filter(
+    (p) => darf(p.min_role) && (p.min_stufe ? darfStufe(p.min_stufe) : true),
+  )
 
   return (
     <div className="min-h-svh md:flex">

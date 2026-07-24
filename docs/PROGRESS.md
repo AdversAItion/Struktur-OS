@@ -365,6 +365,28 @@ Bewusst nicht geraten (CLAUDE.md: „Bei Unsicherheit über Vertriebslogik: FRAG
 
 Der komplette Fahrplan ist umgesetzt. Als Nächstes die **Audit-Phase**.
 
+## Audit-Phase — Fortschritt
+Gemeinsam entschiedene Vertriebslogik, gebaut + auf die Live-DB gepusht:
+- **0007** Termin-Typen: REC, VG, TTV, TV, ZVG, Einarbeitung, Meeting, Grundkurs.
+- **0008** Wochenziel Termine pro Partner (Referenz 5), setzt nur der master.
+- **0009** Akademie je Karrierestufe: `akademie_module.min_stufe` + Stufen-Gating
+  in den SELECT-Policies; „Stufe ab"-Auswahl in der Modul-Verwaltung.
+- **0010** Struktur-Admin ab Stufe 3: ein Leiter (Stufe ≥ 3) sieht seine Downline
+  und darf sie hochstufen (bis zur eigenen Stufe) und aktiv/inaktiv schalten.
+  Rolle und `upline_id` bleiben master-only. Neues Modul `src/modules/struktur/`,
+  Route `/struktur` (gated `min_stufe=3`), Nav-Eintrag ab Stufe 3.
+- Insights-Schwellenwerte gelockert (`logik.ts`), Edge Function `insights-generieren`
+  live + Cron aktiv.
+- Alles nach GitHub gepusht (`AdversAItion/Struktur-OS`).
+
+**Noch offen in der Audit-Phase (braucht Nutzer-Input):**
+- Stufe-2 GP-Dashboard (Strukturproduktion): wartet auf die zwei Warnschwellen
+  (Einheiten-Summe X, neue GPs Y). Umsetzung als SECURITY-DEFINER-Aggregatfunktion.
+- Onboarding-Strecke (Abfolge + Fristen je Trigger) + Einladungs-Flow (service_role,
+  ermöglicht „Partner anlegen" für Stufe-3-Admins und master).
+- Externe Keys: `RESEND_API_KEY`/`RESEND_ABSENDER` (onboarding-erinnerungen + Cron),
+  `ANTHROPIC_API_KEY` (namensliste-interview, opt. Insights-KI).
+
 ## Nächste Steps — Audit-Phase (vom Nutzer gewünscht)
 Alle Sessions gemeinsam durchgehen und manuell adjustieren — inkl. Infra-Deploys,
 die bewusst offen gehalten sind:

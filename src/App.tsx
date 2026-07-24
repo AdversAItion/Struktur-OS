@@ -39,6 +39,9 @@ const KalenderSeite = lazy(() =>
 const NamenslisteSeite = lazy(() =>
   import('@/modules/namensliste/NamenslisteSeite').then((m) => ({ default: m.NamenslisteSeite })),
 )
+const StrukturSeite = lazy(() =>
+  import('@/modules/struktur/StrukturSeite').then((m) => ({ default: m.StrukturSeite })),
+)
 // Öffentliche Rekrutierungs-Seite mit Three.js — eigener Chunk, nicht im Haupt-Bundle.
 const BenefitsSeite = lazy(() =>
   import('@/modules/benefits/BenefitsSeite').then((m) => ({ default: m.BenefitsSeite })),
@@ -116,6 +119,15 @@ export default function App() {
             />
             <Route path="/kalender" element={<KalenderSeite />} />
             <Route path="/namensliste" element={<NamenslisteSeite />} />
+            {/* Struktur-Verwaltung ab Stufe 3 (Route-Gating; die RLS sperrt verbindlich). */}
+            <Route
+              path="/struktur"
+              element={
+                <Geschuetzt min_stufe={3}>
+                  <StrukturSeite />
+                </Geschuetzt>
+              }
+            />
             {/* Unbekannter Pfad -> zurück auf den rollengerechten Einstieg. */}
             <Route path="*" element={<StartWeiterleitung />} />
           </Route>
