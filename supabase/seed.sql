@@ -181,3 +181,32 @@ select p.id, 'bbbbbbbb-0000-0000-0000-000000000001', now() - interval '1 day', f
 from public.partner p
 where p.user_id = '44444444-4444-4444-4444-444444444444'
 on conflict (partner_id, lektion_id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- LOKALE PREVIEW-FIXES (nur lokal, NIE gegen Produktion — seed läuft nur bei
+-- `supabase db reset`). Zwei Dinge, die der reine Migrations-/Seed-Stand lokal
+-- nicht abdeckt, ohne die jeder Login nach dem Anmelden ins Leere läuft:
+--
+-- 1) GoTrue kann NULL in seinen Token-Spalten nicht lesen ("converting NULL to
+--    string is unsupported"). Manuell geseedete auth.users haben diese Spalten
+--    NULL — auf '' setzen.
+-- 2) Die RLS-Policies zielen auf die Rolle `authenticated`, aber die Tabellen
+--    haben lokal KEINE Tabellen-GRANTs an `authenticated` (in gehostetem
+--    Supabase kommen die über Default-Privileges automatisch; die lokale CLI
+--    legt sie hier nicht an). Ohne GRANT: "permission denied for table ...".
+--    RLS bleibt die eigentliche Zeilen-Sperre obendrauf.
+-- ---------------------------------------------------------------------------
+update auth.users set
+  confirmation_token        = coalesce(confirmation_token, ''),
+  recovery_token            = coalesce(recovery_token, ''),
+  email_change              = coalesce(email_change, ''),
+  email_change_token_new    = coalesce(email_change_token_new, ''),
+  email_change_token_current= coalesce(email_change_token_current, ''),
+  phone_change              = coalesce(phone_change, ''),
+  phone_change_token        = coalesce(phone_change_token, ''),
+  reauthentication_token    = coalesce(reauthentication_token, '')
+where email like '%@struktur.test';
+
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to authenticated;

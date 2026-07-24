@@ -1,10 +1,45 @@
 # Fortschritt
 
-Stand: 2026-07-18
+Stand: 2026-07-24
 
 ---
 
 ## Fertig
+
+### Design-Reskin auf Wein/Creme + lokale Preview (Session 10)
+Full-Reskin der gesamten App vom dunklen Gold-Look auf ein Wein/Creme-Editorial-
+Design (ausdrücklicher Owner-Auftrag, überschreibt die „FEST"-Palette der CLAUDE.md)
+und eine lauffähige lokale Preview zum Durchklicken.
+
+- **Reskin rein über Tokens**: `src/index.css` `@theme` umgeschrieben — Papier
+  `#F6F1E8`, Panel/Weiss `#FFFFFF`, Linie `#E4DCCF`, Akzent Wein `#6E1423`, Tinte
+  `#2A1418`, Muted `#93857E`; `color-scheme: light`. Fonts auf **Fraunces** (Display)
+  + **Inter** (Body), Space Mono bleibt für Zahlen (`.num`). `index.html`-Font-Link
+  und `theme-color` angepasst. Weil die ganze App über die sechs Farb-Tokens läuft,
+  kippt sie damit komplett — inkl. der `text-bg`-auf-Akzent-Buttons (heller Text auf
+  Wein, Kontrast passt). Keine Komponenten-Edits nötig. `npm run build` grün.
+- **Verifiziert** (Playwright, echte lokale Supabase, Login als master): Login,
+  Dashboard (Team-Ist/Soll mit Wein-Balken), Akademie (Module nach Kategorie),
+  Kalender, Namensliste, Benefits — alle rendern sauber im neuen Look, 0 Konsolenfehler.
+
+**Befunde beim Hochziehen der echten lokalen DB** (vorher nie aufgefallen, weil die
+E2E-Tests PostgREST gemockt haben — `page.route()`):
+- **Fehlende Tabellen-GRANTs**: Die RLS-Policies zielen auf `authenticated`, aber
+  die Tabellen haben lokal keine GRANTs an diese Rolle → nach dem Login
+  „permission denied for table …". Lokal in `seed.sql` gefixt (GRANT + Default-
+  Privileges). **Zu prüfen fürs echte Deployment**: greifen die Grants in der
+  Produktions-DB (dort kommen sie normalerweise über Supabase-Default-Privileges)?
+- **NULL-Token in `auth.users`**: GoTrue kann NULL in `confirmation_token` etc.
+  nicht lesen → 500 „converting NULL to string". Im `seed.sql` auf `''` gesetzt.
+- **E-Mail/Passwort-Provider aus** (`GOTRUE_EXTERNAL_EMAIL_ENABLED=false`): lässt
+  sich in dieser CLI-Version nicht per `config.toml` schalten; für die Preview den
+  Auth-Container mit dem Flag `=true` neu erzeugt (Laufzeit-Patch, überlebt kein
+  `supabase stop/start`).
+- `supabase/config.toml`: schwere Zusatzdienste (studio, realtime, storage,
+  analytics/vector, edge_runtime, smtp) lokal deaktiviert, damit der Stack auf der
+  ausgelasteten Maschine die Health-Checks besteht. Nur DB/Auth/REST laufen.
+  (Alles git-getrackt → per `git checkout` zurückholbar.)
+
 
 ### Benefits-Showpiece + Polish (Session 9)
 Öffentliche Rekrutierungs-Seite mit 3D-Hero (Three.js) — das „Warum mit uns?"-

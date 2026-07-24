@@ -1,22 +1,36 @@
 @import 'tailwindcss';
 
-/* Design-Tokens — FEST laut CLAUDE.md. Nicht ohne Rückfrage ändern. */
-@theme {
-  --color-bg: #0b0b0c;
-  --color-panel: #141416;
-  --color-line: #28282c;
-  --color-gold: #d4af37;
-  --color-text: #f3f0e7;
-  --color-muted: #98948a;
+/* Design-Tokens.
+   Ursprünglich dunkel/gold (CLAUDE.md). Am 2026-07-24 vom Owner bewusst auf das
+   Wein/Creme-Editorial-Design umgestellt (Full-Reskin, ausdrücklicher Auftrag —
+   überschreibt die "FEST"-Palette der CLAUDE.md). Nicht ohne Rückfrage zurückdrehen.
 
-  --font-display: 'Archivo', system-ui, sans-serif;
-  --font-sans: 'Archivo', system-ui, sans-serif;
+   Die App nutzt durchgängig diese sechs Farb-Tokens, deshalb reskint das Umschreiben
+   hier die gesamte App. Rollen bleiben gleich, nur die Werte kippen von dunkel→hell:
+     bg    = Seitenhintergrund (Creme-Papier)
+     panel = erhöhte Fläche / Karten / Nav (reines Weiss)
+     line  = feine Linien / Rahmen
+     gold  = Akzent (jetzt Bordeaux-Wein) — CTAs, Links, aktive Zustände
+     text  = Fliesstext (weinbraune Tinte statt Schwarz)
+     muted = gedämpfter Text */
+@theme {
+  --color-bg: #f6f1e8;
+  --color-panel: #ffffff;
+  --color-line: #e4dccf;
+  --color-gold: #6e1423;
+  --color-text: #2a1418;
+  --color-muted: #93857e;
+
+  /* Fraunces (Serif) trägt die Display-/Überschriften, Inter den Fliesstext.
+     Space Mono bleibt für Zahlen/Labels (.num). */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, monospace;
 }
 
 @layer base {
   html {
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-text-size-adjust: 100%;
   }
 
