@@ -27,6 +27,11 @@ const ROLLE_OPTIONEN: { wert: Rolle; label: string }[] = (
   ['gp_frisch', 'gp_stufe2', 'fuehrungskraft', 'master'] as Rolle[]
 ).map((r) => ({ wert: r, label: ROLLEN_LABEL[r] }))
 
+const STUFE_OPTIONEN: { wert: string; label: string }[] = [
+  { wert: '', label: 'Keine' },
+  ...[1, 2, 3, 4, 5, 6].map((s) => ({ wert: String(s), label: `ab Stufe ${s}` })),
+]
+
 export function ModulEditor() {
   const { modulId } = useParams<{ modulId: string }>()
   const navigate = useNavigate()
@@ -176,6 +181,7 @@ function ModulStammdaten({
   const [beschreibung, setBeschreibung] = useState(modul.beschreibung ?? '')
   const [kategorie, setKategorie] = useState<AkademieKategorie>(modul.kategorie)
   const [minRole, setMinRole] = useState<Rolle>(modul.min_role)
+  const [minStufe, setMinStufe] = useState<string>(modul.min_stufe == null ? '' : String(modul.min_stufe))
   const [speichert, setSpeichert] = useState(false)
   const [fehler, setFehler] = useState<string | null>(null)
   const [gespeichert, setGespeichert] = useState(false)
@@ -193,6 +199,7 @@ function ModulStammdaten({
       beschreibung: beschreibung.trim() || null,
       kategorie,
       min_role: minRole,
+      min_stufe: minStufe === '' ? null : Number(minStufe),
     }
     try {
       await modulAktualisieren(modul.id, eingabe)
@@ -210,9 +217,10 @@ function ModulStammdaten({
       <p className="num text-xs tracking-widest text-muted uppercase">Stammdaten</p>
       <Feld label="Titel" wert={titel} setzen={setTitel} />
       <Textbereich label="Beschreibung" wert={beschreibung} setzen={setBeschreibung} zeilen={2} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Auswahl label="Kategorie" wert={kategorie} setzen={setKategorie} optionen={KATEGORIE_OPTIONEN} />
-        <Auswahl label="Sichtbar ab" wert={minRole} setzen={setMinRole} optionen={ROLLE_OPTIONEN} />
+        <Auswahl label="Rolle ab" wert={minRole} setzen={setMinRole} optionen={ROLLE_OPTIONEN} />
+        <Auswahl label="Stufe ab" wert={minStufe} setzen={setMinStufe} optionen={STUFE_OPTIONEN} />
       </div>
       <Fehlerzeile>{fehler}</Fehlerzeile>
       <div className="flex items-center gap-3">

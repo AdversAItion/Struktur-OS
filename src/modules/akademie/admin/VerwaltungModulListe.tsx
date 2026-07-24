@@ -13,6 +13,12 @@ const ROLLE_OPTIONEN: { wert: Rolle; label: string }[] = (
   ['gp_frisch', 'gp_stufe2', 'fuehrungskraft', 'master'] as Rolle[]
 ).map((r) => ({ wert: r, label: ROLLEN_LABEL[r] }))
 
+// Karrierestufe als optionale Zusatz-Freischaltung ('' = keine, sonst 1–6).
+const STUFE_OPTIONEN: { wert: string; label: string }[] = [
+  { wert: '', label: 'Keine' },
+  ...[1, 2, 3, 4, 5, 6].map((s) => ({ wert: String(s), label: `ab Stufe ${s}` })),
+]
+
 export function VerwaltungModulListe() {
   const [module, setModule] = useState<AkademieModul[] | null>(null)
   const [fehler, setFehler] = useState<string | null>(null)
@@ -152,6 +158,7 @@ function ModulForm({ onGespeichert }: { onGespeichert: () => void }) {
   const [beschreibung, setBeschreibung] = useState('')
   const [kategorie, setKategorie] = useState<AkademieKategorie>('ergo_basics')
   const [minRole, setMinRole] = useState<Rolle>('gp_frisch')
+  const [minStufe, setMinStufe] = useState<string>('')
   const [speichert, setSpeichert] = useState(false)
   const [fehler, setFehler] = useState<string | null>(null)
 
@@ -167,6 +174,7 @@ function ModulForm({ onGespeichert }: { onGespeichert: () => void }) {
       beschreibung: beschreibung.trim() || null,
       kategorie,
       min_role: minRole,
+      min_stufe: minStufe === '' ? null : Number(minStufe),
     }
     try {
       await modulAnlegen(eingabe)
@@ -189,9 +197,10 @@ function ModulForm({ onGespeichert }: { onGespeichert: () => void }) {
         zeilen={2}
         platzhalter="Optional, ein Satz"
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Auswahl label="Kategorie" wert={kategorie} setzen={setKategorie} optionen={KATEGORIE_OPTIONEN} />
-        <Auswahl label="Sichtbar ab" wert={minRole} setzen={setMinRole} optionen={ROLLE_OPTIONEN} />
+        <Auswahl label="Rolle ab" wert={minRole} setzen={setMinRole} optionen={ROLLE_OPTIONEN} />
+        <Auswahl label="Stufe ab" wert={minStufe} setzen={setMinStufe} optionen={STUFE_OPTIONEN} />
       </div>
       <Fehlerzeile>{fehler}</Fehlerzeile>
       <button

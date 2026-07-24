@@ -22,6 +22,8 @@ export interface AkademieModul {
   titel: string
   beschreibung: string | null
   min_role: Rolle
+  /** Zusätzliche Mindest-Karrierestufe (1–6) oder `null` = keine (0009). */
+  min_stufe: number | null
   reihenfolge: number
   kategorie: AkademieKategorie
   created_at: string
@@ -72,6 +74,7 @@ export interface ModulEingabe {
   titel: string
   beschreibung: string | null
   min_role: Rolle
+  min_stufe: number | null
   kategorie: AkademieKategorie
 }
 

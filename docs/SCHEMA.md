@@ -1,6 +1,6 @@
 # Datenbank-Schema
 
-Stand: Migrationen `0001` – `0008`.
+Stand: Migrationen `0001` – `0009`.
 **Nach jeder Migration diese Datei aktualisieren** (CLAUDE.md, Merge-Regel 2).
 
 Alle Schema-Änderungen laufen über SQL-Dateien in `supabase/migrations/` —
@@ -16,6 +16,7 @@ nie manuell im Supabase-Dashboard klicken.
 | `0006_insights.sql` | Tabelle `insights` (KI-Handlungsempfehlungen fürs Master-Dashboard) |
 | `0007_termin_typen.sql` | `termine.typ` auf die echten Gesprächsarten (rec/vg/ttv/tv/zvg/…) |
 | `0008_wochenziel_termine.sql` | `partner.wochenziel_termine` (Default 5) + RLS-Sperre (nur master setzt) |
+| `0009_akademie_stufe.sql` | `akademie_module.min_stufe` + Stufen-Gating in den SELECT-Policies |
 
 ---
 
@@ -269,6 +270,7 @@ akademie_module  ──1:n──> akademie_lektionen ──1:n──> akademie_t
 | `titel` | `text` NOT NULL | nicht leer |
 | `beschreibung` | `text` | |
 | `min_role` | `rolle` NOT NULL | Default `gp_frisch`. **Die Freischaltung.** |
+| `min_stufe` | `smallint` NULL | (0009) Zusätzliche Mindest-Karrierestufe 1–6, `null` = keine. |
 | `reihenfolge` | `integer` NOT NULL | Default `0` |
 | `kategorie` | `akademie_kategorie` NOT NULL | Enum, siehe unten |
 | `created_at` | `timestamptz` NOT NULL | |
