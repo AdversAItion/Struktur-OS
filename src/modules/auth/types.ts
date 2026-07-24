@@ -56,3 +56,13 @@ export interface Partner {
 export function hatMindestensRolle(rolle: Rolle, min_role: Rolle): boolean {
   return ROLLEN_RANG[rolle] >= ROLLEN_RANG[min_role]
 }
+
+/**
+ * Reicht die Karrierestufe des Partners für die geforderte Mindeststufe?
+ * Grundlage fürs Stufe-Gating von Funktionen (z. B. Admin-Rechte ab Stufe 3).
+ * Wie beim Rollen-Gating: reines UI-Gating — die verbindliche Sperre ist die RLS
+ * (`public.meine_stufe()`).
+ */
+export function hatMindestensStufe(stufe: Karrierestufe, min_stufe: Karrierestufe): boolean {
+  return stufe >= min_stufe
+}

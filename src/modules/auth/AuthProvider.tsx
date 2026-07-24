@@ -6,7 +6,7 @@ import {
   sessionLaden,
 } from './api'
 import { Kontext, type AuthKontext } from './kontext'
-import { hatMindestensRolle, type Partner } from './types'
+import { hatMindestensRolle, hatMindestensStufe, type Partner } from './types'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [partner, setPartner] = useState<Partner | null>(null)
@@ -53,6 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       angemeldet: partner !== null,
       darf: (min_role) =>
         partner ? hatMindestensRolle(partner.rolle, min_role) : false,
+      darfStufe: (min_stufe) =>
+        partner ? hatMindestensStufe(partner.stufe, min_stufe) : false,
       abmelden: abmeldenApi,
       neuLaden,
     }),

@@ -1,5 +1,5 @@
 import { createContext, use } from 'react'
-import type { Partner, Rolle } from './types'
+import type { Karrierestufe, Partner, Rolle } from './types'
 
 export interface AuthKontext {
   partner: Partner | null
@@ -7,6 +7,8 @@ export interface AuthKontext {
   angemeldet: boolean
   /** Nur UI-Gating. Die verbindliche Sperre sind die RLS-Policies. */
   darf: (min_role: Rolle) => boolean
+  /** UI-Gating nach Karrierestufe (1–6). Verbindlich sperrt die RLS. */
+  darfStufe: (min_stufe: Karrierestufe) => boolean
   abmelden: () => Promise<void>
   neuLaden: () => Promise<void>
 }

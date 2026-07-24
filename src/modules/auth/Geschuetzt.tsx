@@ -1,22 +1,23 @@
 import type { ReactNode } from 'react'
 import { useAuth } from './kontext'
-import { ROLLEN_LABEL, type Rolle } from './types'
+import { KARRIERESTUFE_LABEL, ROLLEN_LABEL, type Karrierestufe, type Rolle } from './types'
 import { LoginSeite } from './LoginSeite'
 
 /**
- * Route-Guard. `min_role` schaltet Inhalte pro Rolle frei — dieselbe Mechanik,
- * die später die Akademie-Module nutzen.
- *
- * Achtung: reines UI-Gating. Die verbindliche Sperre sind die RLS-Policies.
+ * Route-Guard. Schaltet Inhalte frei nach Rolle (`min_role`) und/oder
+ * Karrierestufe (`min_stufe`). Beides ist reines UI-Gating — die verbindliche
+ * Sperre sind die RLS-Policies (rolle_rang / meine_stufe in der DB).
  */
 export function Geschuetzt({
   children,
   min_role,
+  min_stufe,
 }: {
   children: ReactNode
   min_role?: Rolle
+  min_stufe?: Karrierestufe
 }) {
-  const { laedt, angemeldet, darf } = useAuth()
+  const { laedt, angemeldet, darf, darfStufe } = useAuth()
 
   if (laedt) {
     return (
@@ -29,22 +30,24 @@ export function Geschuetzt({
   if (!angemeldet) return <LoginSeite />
 
   if (min_role && !darf(min_role)) {
-    return (
-      <div className="flex min-h-svh items-center justify-center px-5">
-        <div className="max-w-sm text-center">
-          <p className="num text-xs tracking-widest text-gold uppercase">
-            Gesperrt
-          </p>
-          <h1 className="mt-2 font-display text-2xl font-bold">
-            Noch nicht freigeschaltet
-          </h1>
-          <p className="mt-3 text-sm text-muted">
-            Dieser Bereich ist ab {ROLLEN_LABEL[min_role]} verfügbar.
-          </p>
-        </div>
-      </div>
-    )
+    return <Gesperrt grund={`ab ${ROLLEN_LABEL[min_role]}`} />
+  }
+
+  if (min_stufe && !darfStufe(min_stufe)) {
+    return <Gesperrt grund={`ab Stufe ${min_stufe} (${KARRIERESTUFE_LABEL[min_stufe]})`} />
   }
 
   return <>{children}</>
+}
+
+function Gesperrt({ grund }: { grund: string }) {
+  return (
+    <div className="flex min-h-svh items-center justify-center px-5">
+      <div className="max-w-sm text-center">
+        <p className="num text-xs tracking-widest text-gold uppercase">Gesperrt</p>
+        <h1 className="mt-2 font-display text-2xl font-bold">Noch nicht freigeschaltet</h1>
+        <p className="mt-3 text-sm text-muted">Dieser Bereich ist {grund} verfügbar.</p>
+      </div>
+    </div>
+  )
 }

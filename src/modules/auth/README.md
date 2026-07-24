@@ -39,7 +39,10 @@ das Weglassen des Buttons ist keine Sperre.
 ## Komponenten
 - `AuthProvider.tsx` — Context, hält Session + Partner. Dünn, keine Logik.
 - `LoginSeite.tsx` — reine Anmeldung.
-- `Geschuetzt.tsx` — Route-Guard, optional mit `min_role`.
+- `Geschuetzt.tsx` — Route-Guard, optional mit `min_role` und/oder `min_stufe`
+  (Karrierestufe-Gating; UI-Ebene, verbindlich sperrt die RLS via `meine_stufe()`).
+  Kontext bietet dafür `darf(min_role)` und `darfStufe(min_stufe)`; reine
+  Vergleichslogik in `hatMindestensRolle` / `hatMindestensStufe`.
 
 ## API (`api.ts`)
 Alle Aufrufe gegen Supabase laufen hier durch. Komponenten importieren **nie**
